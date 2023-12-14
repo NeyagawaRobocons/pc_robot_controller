@@ -1,0 +1,14 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/home/tonto/ROS2_ws/install/nucleo_agent/local/lib/python3.10/dist-packages",
+        "/home/tonto/catkin_ws/devel/lib/python3/dist-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/tonto/ROS2_ws/install/nucleo_agent/local/lib/python3.10/dist-packages",
+        "/home/tonto/catkin_ws/devel/lib/python3/dist-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ]
+}
