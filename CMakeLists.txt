@@ -13,8 +13,10 @@ find_package(ament_cmake_python REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
+find_package(raylib 3.0 REQUIRED)
 
 add_executable(controller src/controller.cpp)
+target_link_libraries(controller raylib)
 target_include_directories(controller PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
