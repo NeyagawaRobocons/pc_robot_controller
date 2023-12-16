@@ -18,6 +18,10 @@ Vector2 normarize(Vector2 vec) {
     else return Vector2{ vec.x /len, vec.y /len};
 }
 
+Vector2 invert_y(Vector2 vec){
+    return Vector2{vec.x, -vec.y};
+}
+
 Vector2 operator*(Vector2 v, float f){
     return Vector2{v.x*f, v.y*f};
 }
@@ -26,18 +30,22 @@ Vector2 operator+(Vector2 v1, Vector2 v2){
     return Vector2{v1.x + v2.x, v1.y + v2.y};
 }
 
+Vector2 operator-(Vector2 v1, Vector2 v2){
+    return Vector2{v1.x - v2.x, v1.y - v2.y};
+}
+
 class Controller : public rclcpp::Node {
 public:
     Controller() : Node("controller") {
-        publisher_ = this->create_publisher<std_msgs::msg::Float64MultiArray>("motor_3omini", 10);
+        publisher_ = this->create_publisher<std_msgs::msg::Float64MultiArray>("input_vel", 10);
         ui_thread_ = std::thread(&Controller::ui_main, this);
     }
 private:
     void ui_main(){
         // Initialization
         //--------------------------------------------------------------------------------------
-        const int screenWidth = 800;
-        const int screenHeight = 450;
+        const int screenWidth = 1280;
+        const int screenHeight = 720;
 
         InitWindow(screenWidth, screenHeight, "omni controller");
 
@@ -71,7 +79,8 @@ private:
             robot.r_draw[i].y = - scale * robot.r[i].y + robot.origin.y;
         }
         robot.r_draw[3] = robot.r_draw[0];
-        
+
+        bool drag_vec = 0;
 
         Rectangle button0{0};
         button0.x = screenWidth - 150;
@@ -92,29 +101,37 @@ private:
             if(CheckCollisionPointRec(mouse, button0) && IsMouseButtonDown(MOUSE_BUTTON_LEFT)) button0_down = true;
             if(button0_down) if(IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) button0_down = false;
 
+            if(CheckCollisionPointCircle(mouse, invert_y(robot.v_rec*scale)+robot.origin, 25.0f)  && IsMouseButtonDown(MOUSE_BUTTON_LEFT)) drag_vec = true;
+            if(drag_vec && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) drag_vec = false;
+
             // calculate robot vec from key
-            if (IsKeyDown(KEY_W)){
-                robot.v_rec.y = 1;
-            }else if (IsKeyDown(KEY_S)){
-                robot.v_rec.y = -1;
+            if(drag_vec){
+                robot.v_rec = invert_y(mouse - robot.origin) * (1.0f / scale);
+                std::cout << "dragging vector" << std::endl;
             }else{
-                robot.v_rec.y = 0;
-            }
-            if (IsKeyDown(KEY_D)){
-                robot.v_rec.x = 1;
-            }else if (IsKeyDown(KEY_A)){
-                robot.v_rec.x = -1;
-            }else{
-                robot.v_rec.x = 0;
+                if (IsKeyDown(KEY_W)){
+                    robot.v_rec.y = 1;
+                }else if (IsKeyDown(KEY_S)){
+                    robot.v_rec.y = -1;
+                }else{
+                    robot.v_rec.y = 0;
+                }
+                if (IsKeyDown(KEY_D)){
+                    robot.v_rec.x = 1;
+                }else if (IsKeyDown(KEY_A)){
+                    robot.v_rec.x = -1;
+                }else{
+                    robot.v_rec.x = 0;
+                }
+                robot.v_rec = normarize(robot.v_rec)*1.0;
             }
             if (IsKeyDown(KEY_Q)){
-                robot.rot = 2.0;
+                robot.rot = 1.0;
             }else if (IsKeyDown(KEY_E)){
-                robot.rot = -2.0;
+                robot.rot = -1.0;
             }else{
                 robot.rot = 0;
             }
-            robot.v_rec = normarize(robot.v_rec)*1.0;
             for (size_t i = 0; i < 3; i++)
             {
                 robot.v_tire[i] = (dot(robot.e_tire[i], robot.v_rec) + robot.rot * robot.l) / robot.r_tire;
@@ -137,13 +154,14 @@ private:
                 ClearBackground(RAYWHITE);
 
                 DrawSplineLinear(robot.r_draw, 4, 4.0f, GRAY);
-                DrawSplineSegmentLinear(robot.origin, Vector2{robot.v_rec.x*scale+robot.origin.x, -robot.v_rec.y*scale+robot.origin.y}, 4.0f, PINK);
+                DrawSplineSegmentLinear(robot.origin, invert_y(robot.v_rec*scale)+robot.origin, 4.0f, PINK);
+                DrawCircleV(invert_y(robot.v_rec*scale)+robot.origin, 8.0f, PINK);
                 for (size_t i = 0; i < 3; i++)
                 {
                     DrawSplineSegmentLinear(robot.r_draw[i], robot.v_tire_draw[i], 4.0f, BLUE);
                 }
                 
-                DrawText("omni! 3 wheel!", 336, 200, 20, LIGHTGRAY);
+                DrawText("omni! 3 wheel!", 400, 20, 20, LIGHTGRAY);
 
                 DrawRectangleRec(button0, button0_down ? DARKBLUE : SKYBLUE);
 
@@ -154,7 +172,7 @@ private:
                 {
                     ss << "omega[" << i << "] : " << robot.v_tire[i] << std::endl;
                 }
-                DrawText(ss.str().c_str(), 550, 200, 20, GRAY);
+                DrawText(ss.str().c_str(), 1000, 200, 20, GRAY);
 
             EndDrawing();
             //----------------------------------------------------------------------------------
