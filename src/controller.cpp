@@ -7,32 +7,10 @@
 #include <sstream>
 #include <cmath>
 #include "raylib.h"
+#include "vector_calc.hpp"
+#include "slider.hpp"
+#include "button.hpp"
 
-float dot(Vector2 a, Vector2 b) {
-    return a.x * b.x + a.y * b.y;
-}
-
-Vector2 normarize(Vector2 vec) {
-    float len = sqrtf32(vec.x * vec.x + vec.y * vec.y);
-    if(len == 0.0f) return Vector2{ 0.0f, 0.0f};
-    else return Vector2{ vec.x /len, vec.y /len};
-}
-
-Vector2 invert_y(Vector2 vec){
-    return Vector2{vec.x, -vec.y};
-}
-
-Vector2 operator*(Vector2 v, float f){
-    return Vector2{v.x*f, v.y*f};
-}
-
-Vector2 operator+(Vector2 v1, Vector2 v2){
-    return Vector2{v1.x + v2.x, v1.y + v2.y};
-}
-
-Vector2 operator-(Vector2 v1, Vector2 v2){
-    return Vector2{v1.x - v2.x, v1.y - v2.y};
-}
 
 class Controller : public rclcpp::Node {
 public:
@@ -82,12 +60,8 @@ private:
 
         bool drag_vec = 0;
 
-        Rectangle button0{0};
-        button0.x = screenWidth - 150;
-        button0.y = 100;
-        button0.width = 100;
-        button0.height = 30;
-        bool button0_down = false;
+        slider sl({600, 400}, {750, 400}, 5.0f, BLUE);
+        toggle_button tb({600, 200}, 150, 50, GRAY, BLUE);
 
         SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
         //--------------------------------------------------------------------------------------
@@ -98,11 +72,8 @@ private:
             // Update
             //----------------------------------------------------------------------------------
             Vector2 mouse = GetMousePosition();
-            if(CheckCollisionPointRec(mouse, button0) && IsMouseButtonDown(MOUSE_BUTTON_LEFT)) button0_down = true;
-            if(button0_down) if(IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) button0_down = false;
-
-            if(CheckCollisionPointCircle(mouse, invert_y(robot.v_rec*scale)+robot.origin, 25.0f)  && IsMouseButtonDown(MOUSE_BUTTON_LEFT)) drag_vec = true;
-            if(drag_vec && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) drag_vec = false;
+            sl.process(mouse);
+            tb.process(mouse);
 
             // calculate robot vec from key
             if(drag_vec){
@@ -153,6 +124,9 @@ private:
 
                 ClearBackground(RAYWHITE);
 
+                sl.draw();
+                tb.draw();
+
                 DrawSplineLinear(robot.r_draw, 4, 4.0f, GRAY);
                 DrawSplineSegmentLinear(robot.origin, invert_y(robot.v_rec*scale)+robot.origin, 4.0f, PINK);
                 DrawCircleV(invert_y(robot.v_rec*scale)+robot.origin, 8.0f, PINK);
@@ -162,8 +136,6 @@ private:
                 }
                 
                 DrawText("omni! 3 wheel!", 400, 20, 20, LIGHTGRAY);
-
-                DrawRectangleRec(button0, button0_down ? DARKBLUE : SKYBLUE);
 
                 std::ostringstream ss;
                 ss << std::fixed;
