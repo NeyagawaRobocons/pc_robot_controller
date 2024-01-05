@@ -11,6 +11,8 @@ find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(nucleo_agent REQUIRED)
+find_package(mecha_control REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(raylib 3.0 REQUIRED)
@@ -28,6 +30,8 @@ ament_target_dependencies(
   "ament_cmake_python"
   "std_msgs"
   "sensor_msgs"
+  nucleo_agent
+  mecha_control
   "rosidl_default_generators"
 )
 

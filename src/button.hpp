@@ -23,6 +23,9 @@ public:
         if(CheckCollisionPointRec(mouse, rec)  && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))toggled = !toggled;
         return toggled;
     }
+    bool get_value(){
+        return toggled;
+    }
     void draw(){
         DrawRectangleRec(rec, toggled ? color_toggled : color_untoggled);
     }

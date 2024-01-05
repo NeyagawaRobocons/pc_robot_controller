@@ -1,6 +1,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "std_msgs/msg/float64_multi_array.hpp"
+#include "mecha_control/msg/actuator_commands.hpp"
 #include <iostream>
 #include <thread>
 #include <string>
@@ -15,7 +16,9 @@
 class Controller : public rclcpp::Node {
 public:
     Controller() : Node("controller") {
-        publisher_ = this->create_publisher<std_msgs::msg::Float64MultiArray>("input_vel", 10);
+        omni_publisher_ = this->create_publisher<std_msgs::msg::Float64MultiArray>("input_vel", 10);
+        daiza_publisher_ = this->create_publisher<mecha_control::msg::ActuatorCommands>("daiza_clamp", 10);
+        hina_publisher_ = this->create_publisher<mecha_control::msg::ActuatorCommands>("hina_dastpan", 10);
         ui_thread_ = std::thread(&Controller::ui_main, this);
     }
 private:
@@ -60,8 +63,14 @@ private:
 
         bool drag_vec = 0;
 
-        slider sl({600, 400}, {750, 400}, 5.0f, BLUE);
-        toggle_button tb({600, 200}, 150, 50, GRAY, BLUE);
+        slider sl({1000, 400}, {1100, 400}, 5.0f, BLUE);
+        toggle_button tb({1000, 300}, 100, 50, GRAY, BLUE);
+
+        toggle_button daiza_cyl12({600, 600}, 50, 30, GRAY, PINK);
+        toggle_button daiza_cyl3({670, 600}, 50, 30, GRAY, PINK);
+        toggle_button daiza_cyl4({740, 600}, 50, 30, GRAY, PINK);
+
+        int count = 0;
 
         SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
         //--------------------------------------------------------------------------------------
@@ -74,6 +83,9 @@ private:
             Vector2 mouse = GetMousePosition();
             sl.process(mouse);
             tb.process(mouse);
+            daiza_cyl12.process(mouse);
+            daiza_cyl3.process(mouse);
+            daiza_cyl4.process(mouse);
 
             // calculate robot vec from key
             if(drag_vec){
@@ -110,14 +122,20 @@ private:
             //publish motor
             auto message = std_msgs::msg::Float64MultiArray();
             message.data = {robot.v_tire[0], robot.v_tire[1], robot.v_tire[2]};
-            publisher_->publish(message);
             for (size_t i = 0; i < 3; i++)
             {
                 robot.v_tire_draw[i].x = robot.e_tire[i].x * robot.v_tire[i] * scale_vec + robot.r_draw[i].x;
                 robot.v_tire_draw[i].y = - robot.e_tire[i].y * robot.v_tire[i] * scale_vec + robot.r_draw[i].y;
             }
-            
-
+            //publish daiza
+            auto daiza_message = mecha_control::msg::ActuatorCommands();
+            daiza_message.cylinder_states = {daiza_cyl12.get_value(), daiza_cyl12.get_value(), daiza_cyl3.get_value(), daiza_cyl4.get_value()};
+            count++;
+            if(count >= 3){
+                omni_publisher_->publish(message);
+                daiza_publisher_->publish(daiza_message);
+                count = 0;
+            }
             // Draw
             //----------------------------------------------------------------------------------
             BeginDrawing();
@@ -126,6 +144,9 @@ private:
 
                 sl.draw();
                 tb.draw();
+                daiza_cyl12.draw();
+                daiza_cyl3.draw();
+                daiza_cyl4.draw();
 
                 DrawSplineLinear(robot.r_draw, 4, 4.0f, GRAY);
                 DrawSplineSegmentLinear(robot.origin, invert_y(robot.v_rec*scale)+robot.origin, 4.0f, PINK);
@@ -157,7 +178,9 @@ private:
 
         return ;
     }
-    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr publisher_;
+    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr omni_publisher_;
+    rclcpp::Publisher<mecha_control::msg::ActuatorCommands>::SharedPtr daiza_publisher_;
+    rclcpp::Publisher<mecha_control::msg::ActuatorCommands>::SharedPtr hina_publisher_;
     rclcpp::TimerBase::SharedPtr timer_;
     std::thread ui_thread_;
 };
