@@ -23,6 +23,10 @@ public:
         if(CheckCollisionPointRec(mouse, rec)  && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))toggled = !toggled;
         return toggled;
     }
+    bool toggle(){
+        toggled = !toggled;
+        return toggled;
+    }
     bool get_value(){
         return toggled;
     }

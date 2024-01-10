@@ -87,6 +87,15 @@ private:
             daiza_cyl3.process(mouse);
             daiza_cyl4.process(mouse);
 
+            if(IsKeyPressed(KEY_ONE)){
+                daiza_cyl12.toggle();
+            }
+            if(IsKeyPressed(KEY_TWO)){
+                daiza_cyl3.toggle();
+            }
+            if(IsKeyPressed(KEY_THREE)){
+                daiza_cyl4.toggle();
+            }
             // calculate robot vec from key
             if(drag_vec){
                 robot.v_rec = invert_y(mouse - robot.origin) * (1.0f / scale);
