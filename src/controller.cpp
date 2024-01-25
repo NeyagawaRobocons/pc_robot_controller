@@ -11,6 +11,7 @@
 #include "vector_calc.hpp"
 #include "slider.hpp"
 #include "button.hpp"
+#include "label.hpp"
 
 
 class Controller : public rclcpp::Node {
@@ -25,10 +26,13 @@ private:
     void ui_main(){
         // Initialization
         //--------------------------------------------------------------------------------------
-        const int screenWidth = 1280;
-        const int screenHeight = 720;
+        int screenWidth = 1280;
+        int screenHeight = 720;
 
+        SetConfigFlags(FLAG_WINDOW_RESIZABLE);
         InitWindow(screenWidth, screenHeight, "omni controller");
+        screenWidth = GetScreenWidth();
+        screenHeight = GetScreenHeight();
 
         float scale = 300;
         float scale_vec = 0.051 * 300;
@@ -63,12 +67,15 @@ private:
 
         bool drag_vec = 0;
 
-        slider sl({1000, 400}, {1100, 400}, 5.0f, BLUE);
-        toggle_button tb({1000, 300}, 100, 50, GRAY, BLUE);
+        // slider sl({1000, 400}, {1100, 400}, 5.0f, BLUE);
+        // toggle_button tb({1000, 300}, 100, 50, GRAY, BLUE);
 
-        toggle_button daiza_cyl12({600, 600}, 50, 30, GRAY, PINK);
-        toggle_button daiza_cyl3({670, 600}, 50, 30, GRAY, PINK);
-        toggle_button daiza_cyl4({740, 600}, 50, 30, GRAY, PINK);
+        toggle_button daiza_cyl12({screenWidth -200, 300}, 130, 70, GRAY, PINK);
+        toggle_button daiza_cyl3({screenWidth -200, 400}, 130, 70, GRAY, PINK);
+        toggle_button daiza_cyl4({screenWidth -200, 500}, 130, 70, GRAY, PINK);
+        label label_cyl12("cylinder 1,2", {screenWidth -190, 325}, 20);
+        label label_cyl3("cylinder 3", {screenWidth -190, 425}, 20);
+        label label_cyl4("cylinder 4", {screenWidth -190, 525}, 20);
 
         int count = 0;
 
@@ -80,9 +87,29 @@ private:
         {
             // Update
             //----------------------------------------------------------------------------------
+            //resize action
+            screenWidth = GetScreenWidth();
+            screenHeight = GetScreenHeight();
+            daiza_cyl12.move({screenWidth -200, 300});
+            daiza_cyl3.move({screenWidth -200, 400});
+            daiza_cyl4.move({screenWidth -200, 500});
+            label_cyl12.move({screenWidth -190, 325});
+            label_cyl3.move({screenWidth -190, 425});
+            label_cyl4.move({screenWidth -190, 525});
+            robot.origin = Vector2{screenWidth/2, screenHeight/2};
+            for (size_t i = 0; i < 3; i++)
+            {
+                robot.r_draw[i].x = scale * robot.r[i].x + robot.origin.x;
+                robot.r_draw[i].y = - scale * robot.r[i].y + robot.origin.y;
+            }
+            robot.r_draw[3] = robot.r_draw[0];
+            
+            // logics
+            //
+
             Vector2 mouse = GetMousePosition();
-            sl.process(mouse);
-            tb.process(mouse);
+            // sl.process(mouse);
+            // tb.process(mouse);
             daiza_cyl12.process(mouse);
             daiza_cyl3.process(mouse);
             daiza_cyl4.process(mouse);
@@ -151,11 +178,14 @@ private:
 
                 ClearBackground(RAYWHITE);
 
-                sl.draw();
-                tb.draw();
+                // sl.draw();
+                // tb.draw();
                 daiza_cyl12.draw();
                 daiza_cyl3.draw();
                 daiza_cyl4.draw();
+                label_cyl12.draw();
+                label_cyl3.draw();
+                label_cyl4.draw();
 
                 DrawSplineLinear(robot.r_draw, 4, 4.0f, GRAY);
                 DrawSplineSegmentLinear(robot.origin, invert_y(robot.v_rec*scale)+robot.origin, 4.0f, PINK);
@@ -164,8 +194,6 @@ private:
                 {
                     DrawSplineSegmentLinear(robot.r_draw[i], robot.v_tire_draw[i], 4.0f, BLUE);
                 }
-                
-                DrawText("omni! 3 wheel!", 400, 20, 20, LIGHTGRAY);
 
                 std::ostringstream ss;
                 ss << std::fixed;
@@ -174,7 +202,7 @@ private:
                 {
                     ss << "omega[" << i << "] : " << robot.v_tire[i] << std::endl;
                 }
-                DrawText(ss.str().c_str(), 1000, 200, 20, GRAY);
+                DrawText(ss.str().c_str(), 40, 200, 20, GRAY);
 
             EndDrawing();
             //----------------------------------------------------------------------------------

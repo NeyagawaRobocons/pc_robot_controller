@@ -30,6 +30,13 @@ public:
     bool get_value(){
         return toggled;
     }
+    void set_value(bool value){
+        toggled = value;
+    }
+    void move(Vector2 origin){
+        rec.x = origin.x;
+        rec.y = origin.y;
+    }
     void draw(){
         DrawRectangleRec(rec, toggled ? color_toggled : color_untoggled);
     }
