@@ -70,12 +70,23 @@ private:
         // slider sl({1000, 400}, {1100, 400}, 5.0f, BLUE);
         // toggle_button tb({1000, 300}, 100, 50, GRAY, BLUE);
 
-        toggle_button daiza_cyl12({screenWidth -200, 300}, 130, 70, GRAY, PINK);
-        toggle_button daiza_cyl3({screenWidth -200, 400}, 130, 70, GRAY, PINK);
-        toggle_button daiza_cyl4({screenWidth -200, 500}, 130, 70, GRAY, PINK);
-        label label_cyl12("cylinder 1,2", {screenWidth -190, 325}, 20);
-        label label_cyl3("cylinder 3", {screenWidth -190, 425}, 20);
-        label label_cyl4("cylinder 4", {screenWidth -190, 525}, 20);
+        label title_daize("daiza_clamp mech", {screenWidth -210, 370}, 20);
+        toggle_button daiza_cyl12({screenWidth -200, 400}, 130, 70, GRAY, PINK);
+        toggle_button daiza_cyl3({screenWidth -200, 500}, 130, 70, GRAY, PINK);
+        toggle_button daiza_cyl4({screenWidth -200, 600}, 130, 70, GRAY, PINK);
+        label label_cyl12("cylinder 1,2", {screenWidth -190, 425}, 20);
+        label label_cyl3("cylinder 3", {screenWidth -190, 525}, 20);
+        label label_cyl4("cylinder 4", {screenWidth -190, 625}, 20);
+
+        label title_hina("hina_dustpan mech", {screenWidth -210, 70}, 20);
+        toggle_button hina_expand({screenWidth -200, 100}, 130, 70, GRAY, PINK);
+        slider hina_angle({screenWidth -200, 220}, {screenWidth -70, 220}, 5.0f, BLUE, 0.5);
+        slider servo1({screenWidth -200, 280}, {screenWidth -70, 280}, 5.0f, BLUE, 0.5);
+        slider servo2({screenWidth -200, 340}, {screenWidth -70, 340}, 5.0f, BLUE, 0.5);
+        label label_hina_expand("hina expand", {screenWidth -190, 125}, 20);
+        label label_hina_angle("hina angle", {screenWidth -190, 190}, 20);
+        label label_servo1("servo1", {screenWidth -190, 250}, 20);
+        label label_servo2("servo2", {screenWidth -190, 310}, 20);
 
         int count = 0;
 
@@ -90,12 +101,22 @@ private:
             //resize action
             screenWidth = GetScreenWidth();
             screenHeight = GetScreenHeight();
-            daiza_cyl12.move({screenWidth -200, 300});
-            daiza_cyl3.move({screenWidth -200, 400});
-            daiza_cyl4.move({screenWidth -200, 500});
-            label_cyl12.move({screenWidth -190, 325});
-            label_cyl3.move({screenWidth -190, 425});
-            label_cyl4.move({screenWidth -190, 525});
+            title_daize.move({screenWidth -210, 370});
+            daiza_cyl12.move({screenWidth -200, 400});
+            daiza_cyl3.move({screenWidth -200, 500});
+            daiza_cyl4.move({screenWidth -200, 600});
+            label_cyl12.move({screenWidth -190, 425});
+            label_cyl3.move({screenWidth -190, 525});
+            label_cyl4.move({screenWidth -190, 625});
+            title_hina.move({screenWidth -210, 70});
+            hina_expand.move({screenWidth -200, 100});
+            hina_angle.move({screenWidth -200, 220});
+            servo1.move({screenWidth -200, 280});
+            servo2.move({screenWidth -200, 340});
+            label_hina_expand.move({screenWidth -190, 125});
+            label_hina_angle.move({screenWidth -190, 190});
+            label_servo1.move({screenWidth -190, 250});
+            label_servo2.move({screenWidth -190, 310});
             robot.origin = Vector2{screenWidth/2, screenHeight/2};
             for (size_t i = 0; i < 3; i++)
             {
@@ -113,6 +134,10 @@ private:
             daiza_cyl12.process(mouse);
             daiza_cyl3.process(mouse);
             daiza_cyl4.process(mouse);
+            hina_expand.process(mouse);
+            hina_angle.process(mouse);
+            servo1.process(mouse);
+            servo2.process(mouse);
 
             if(IsKeyPressed(KEY_ONE)){
                 daiza_cyl12.toggle();
@@ -166,10 +191,15 @@ private:
             //publish daiza
             auto daiza_message = mecha_control::msg::ActuatorCommands();
             daiza_message.cylinder_states = {daiza_cyl12.get_value(), daiza_cyl12.get_value(), daiza_cyl3.get_value(), daiza_cyl4.get_value()};
+            // publish hina
+            auto hina_message = mecha_control::msg::ActuatorCommands();
+            hina_message.motor_expand = {hina_expand.get_value()};
+            hina_message.motor_positions = {(hina_angle.get_value() -0.5)*PI, (servo1.get_value() -0.5)*PI, (servo2.get_value() - 0.5)*PI};
             count++;
             if(count >= 3){
                 omni_publisher_->publish(message);
                 daiza_publisher_->publish(daiza_message);
+                hina_publisher_->publish(hina_message);
                 count = 0;
             }
             // Draw
@@ -180,12 +210,22 @@ private:
 
                 // sl.draw();
                 // tb.draw();
+                title_daize.draw();
                 daiza_cyl12.draw();
                 daiza_cyl3.draw();
                 daiza_cyl4.draw();
                 label_cyl12.draw();
                 label_cyl3.draw();
                 label_cyl4.draw();
+                title_hina.draw();
+                hina_expand.draw();
+                hina_angle.draw();
+                servo1.draw();
+                servo2.draw();
+                label_hina_expand.draw();
+                label_hina_angle.draw();
+                label_servo1.draw();
+                label_servo2.draw();
 
                 DrawSplineLinear(robot.r_draw, 4, 4.0f, GRAY);
                 DrawSplineSegmentLinear(robot.origin, invert_y(robot.v_rec*scale)+robot.origin, 4.0f, PINK);

@@ -36,6 +36,10 @@ public:
     float get_value(){
         return value;
     }
+    void move(Vector2 origin){
+        this->end = this->end - this->start + origin;
+        this->start = origin;
+    }
     void draw(){
         DrawSplineSegmentLinear(start, end, width, GRAY);
         DrawSplineSegmentLinear(start, start + (end - start) * value, width, color);
