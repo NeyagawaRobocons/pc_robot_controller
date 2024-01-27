@@ -98,6 +98,10 @@ private:
         toggle_button bonbori_seq({screenWidth -200, 500}, 130, 70, GRAY, PINK);
         uint8_t daiza_state_value = 4;
         uint8_t hina_state_value = 4;
+        uint8_t daiza_state_value_prev = 4;
+        uint8_t hina_state_value_prev = 4;
+        bool hina_servo_prev = 0;
+        bool bonbori_prev = 0;
         char text_label_daiza_seq[14];
         char text_label_hina_seq[14];
         sprintf(text_label_daiza_seq, "daiza seq : %d", daiza_state_value);
@@ -248,11 +252,12 @@ private:
             label_daiza_seq.set_text(text_label_daiza_seq);
             label_hina_seq.set_text(text_label_hina_seq);
             auto mech_message = mecha_control::msg::MechaState();
-            mech_message.daiza_state = daiza_state_value;
-            mech_message.hina_state = hina_state_value;
-            mech_message.bonbori_state = bonbori_seq.get_value();
+            mech_message.daiza_state = daiza_state_value != daiza_state_value_prev ? daiza_state_value : 0;
+            mech_message.hina_state = hina_state_value != hina_state_value_prev ? hina_state_value : 0;
+            mech_message.bonbori_state = bonbori_seq.get_value() == 1 && bonbori_prev == 0;
             // publis hina servo direct mecha command
             auto hina_servo_msg = std_msgs::msg::String();
+            if(bonbori_seq.get_value() == 0 && bonbori_prev == 1) hina_servo_msg.data = "bonboriOff";
             if(hina_servo.get_value()){
                 hina_servo_msg.data = "90degree";
             }else{
@@ -264,7 +269,11 @@ private:
                 // daiza_publisher_->publish(daiza_message);
                 // hina_publisher_->publish(hina_message);
                 mecha_publisher_->publish(mech_message);
-                hina_servo_publisher_->publish(hina_servo_msg);
+                daiza_state_value_prev = daiza_state_value;
+                hina_state_value_prev = hina_state_value;
+                bonbori_prev = bonbori_seq.get_value();
+                if(hina_servo.get_value() != hina_servo_prev) hina_servo_publisher_->publish(hina_servo_msg);
+                hina_servo_prev = hina_servo.get_value();
                 count = 0;
             }
             // Draw
