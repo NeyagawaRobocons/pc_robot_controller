@@ -13,6 +13,7 @@
 #include "slider.hpp"
 #include "button.hpp"
 #include "label.hpp"
+#include "touch.hpp"
 
 
 class Controller : public rclcpp::Node {
@@ -33,6 +34,7 @@ private:
         int screenHeight = 720;
 
         SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+        SetConfigFlags(FLAG_MSAA_4X_HINT);
         InitWindow(screenWidth, screenHeight, "omni controller");
         screenWidth = GetScreenWidth();
         screenHeight = GetScreenHeight();
