@@ -23,7 +23,7 @@ public:
         this->value = reset_value;
     }
     float process(Vector2 mouse){
-        if(CheckCollisionPointCircle(mouse, start + (end - start) * value, width*4)  && IsMouseButtonDown(MOUSE_BUTTON_LEFT)) dragging = true;
+        if(CheckCollisionPointCircle(mouse, start + (end - start) * value, width*4)  && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) dragging = true;
         if(dragging && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) dragging = false;
 
         if(dragging){
