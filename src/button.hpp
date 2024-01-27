@@ -41,3 +41,56 @@ public:
         DrawRectangleRec(rec, toggled ? color_toggled : color_untoggled);
     }
 };
+
+class push_button
+{
+private:
+    Rectangle rec;
+    bool pushed;
+    bool pushed_last;
+    Color color_unpushed;
+    Color color_pushed;
+public:
+    push_button(Vector2 origin, float width, float height, Color color_unpushed, Color color_pushed, bool reset_value=false){
+        this->rec.x = origin.x;
+        this->rec.y = origin.y;
+        this->rec.width = width;
+        this->rec.height = height;
+        this->color_pushed = color_pushed;
+        this->color_unpushed = color_unpushed;
+        this->pushed = reset_value;
+    }
+    bool process(Vector2 mouse){
+        pushed_last = pushed;
+        if(CheckCollisionPointRec(mouse, rec)  && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))pushed = 1;
+        if(pushed && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) pushed = 0;
+        return pushed;
+    }
+    bool push(){
+        pushed = 1;
+        return pushed;
+    }
+    bool unpush(){
+        pushed = 0;
+        return pushed;
+    }
+    bool is_pressed(){
+        return pushed && !pushed_last;
+    }
+    bool is_released(){
+        return !pushed && pushed_last;
+    }
+    bool get_value(){
+        return pushed;
+    }
+    void set_value(bool value){
+        pushed = value;
+    }
+    void move(Vector2 origin){
+        rec.x = origin.x;
+        rec.y = origin.y;
+    }
+    void draw(){
+        DrawRectangleRec(rec, pushed ? color_pushed : color_unpushed);
+    }
+};
