@@ -182,6 +182,9 @@ private:
                 hina_seq.unpush();
             }
             if(IsKeyPressed(KEY_THREE)){
+                hina_servo.toggle();
+            }
+            if(IsKeyPressed(KEY_FOUR)){
                 bonbori_seq.toggle();
             }
             // calculate robot vec from key
