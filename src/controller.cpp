@@ -240,6 +240,7 @@ private:
             auto hina_message = mecha_control::msg::ActuatorCommands();
             hina_message.cylinder_states = {0, 0};
             hina_message.motor_expand = {hina_expand.get_value()};
+            std::cout << "hina_expand : " << hina_expand.get_value() << std::endl;
             hina_message.motor_positions = {(hina_angle.get_value() -0.5)*PI, (servo1.get_value() -0.5)*PI, (servo2.get_value() - 0.5)*PI};
             // // publish mech state
             // if(daiza_seq.is_pressed()){
