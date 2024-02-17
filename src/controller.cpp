@@ -46,27 +46,29 @@ private:
             float rot; // robot rotate rate
             float l;   // r1,2,3 len
             float r_tire;   // tire radius
-            Vector2 r[3]; // vector to tire from origin
-            Vector2 r_draw[4]; // vector to tire from origin
-            Vector2 e_tire[3]; // vector of tire direction normarized
-            float v_tire[3]; // vector of tire
-            Vector2 v_tire_draw[3]; // vector of tire direction normarized
+            Vector2 r[4]; // vector to tire from origin
+            Vector2 r_draw[5]; // vector to tire from origin
+            Vector2 e_tire[4]; // vector of tire direction normarized
+            float v_tire[4]; // vector of tire
+            Vector2 v_tire_draw[4]; // vector of tire direction normarized
         } robot;
         robot.origin = Vector2{screenWidth/2, screenHeight/2};
         robot.l = 0.3;
         robot.r_tire = 0.051;
-        robot.r[0] = Vector2{robot.l * sqrtf32(3) * 0.5f, robot.l * 0.5f};
-        robot.r[1] = Vector2{- robot.l * sqrtf32(3) * 0.5f, robot.l * 0.5f};
-        robot.r[2] = Vector2{0, - robot.l};
-        robot.e_tire[0] = Vector2{- 0.5f, sqrtf32(3) * 0.5f};
-        robot.e_tire[1] = Vector2{- 0.5f, - sqrtf32(3) * 0.5f};
-        robot.e_tire[2] = Vector2{1.0f, 0.0f};
-        for (size_t i = 0; i < 3; i++)
+        robot.r[0] = Vector2{robot.l * sqrtf32(2) * 0.5f, robot.l * sqrtf32(2) * 0.5f};
+        robot.r[1] = Vector2{- robot.l * sqrtf32(2) * 0.5f, robot.l * sqrtf32(2) * 0.5f};
+        robot.r[2] = Vector2{- robot.l * sqrtf32(2) * 0.5f, - robot.l * sqrtf32(2) * 0.5f};
+        robot.r[3] = Vector2{robot.l * sqrtf32(2) * 0.5f, - robot.l * sqrtf32(2) * 0.5f};
+        robot.e_tire[0] = Vector2{- sqrtf32(2) * 0.5f, sqrtf32(2) * 0.5f};
+        robot.e_tire[1] = Vector2{- sqrtf32(2) * 0.5f, - sqrtf32(2) * 0.5f};
+        robot.e_tire[2] = Vector2{sqrtf32(2) * 0.5f, - sqrtf32(2) * 0.5f};
+        robot.e_tire[3] = Vector2{sqrtf32(2) * 0.5f, sqrtf32(2) * 0.5f};
+        for (size_t i = 0; i < 4; i++)
         {
             robot.r_draw[i].x = scale * robot.r[i].x + robot.origin.x;
             robot.r_draw[i].y = - scale * robot.r[i].y + robot.origin.y;
         }
-        robot.r_draw[3] = robot.r_draw[0];
+        robot.r_draw[4] = robot.r_draw[0];
 
         bool drag_vec = 0;
 
@@ -150,12 +152,12 @@ private:
             // label_hina_servo.move({screenWidth -240, 325});
             // label_bonbori_seq.move({screenWidth -190, 525});
             robot.origin = Vector2{screenWidth/2, screenHeight/2};
-            for (size_t i = 0; i < 3; i++)
+            for (size_t i = 0; i < 4; i++)
             {
                 robot.r_draw[i].x = scale * robot.r[i].x + robot.origin.x;
                 robot.r_draw[i].y = - scale * robot.r[i].y + robot.origin.y;
             }
-            robot.r_draw[3] = robot.r_draw[0];
+            robot.r_draw[4] = robot.r_draw[0];
             
             // logics
             //
@@ -213,20 +215,20 @@ private:
                 robot.v_rec = normarize(robot.v_rec)*2.0;
             }
             if (IsKeyDown(KEY_Q)){
-                robot.rot = 2.0;
+                robot.rot = 4.0;
             }else if (IsKeyDown(KEY_E)){
-                robot.rot = -2.0;
+                robot.rot = -4.0;
             }else{
                 robot.rot = 0;
             }
-            for (size_t i = 0; i < 3; i++)
+            for (size_t i = 0; i < 4; i++)
             {
                 robot.v_tire[i] = (dot(robot.e_tire[i], robot.v_rec) + robot.rot * robot.l) / robot.r_tire;
             }
             //publish motor
             auto message = std_msgs::msg::Float64MultiArray();
-            message.data = {robot.v_tire[0], robot.v_tire[1], robot.v_tire[2]};
-            for (size_t i = 0; i < 3; i++)
+            message.data = {robot.v_tire[0], robot.v_tire[1], robot.v_tire[2], robot.v_tire[3]};
+            for (size_t i = 0; i < 4; i++)
             {
                 robot.v_tire_draw[i].x = robot.e_tire[i].x * robot.v_tire[i] * scale_vec + robot.r_draw[i].x;
                 robot.v_tire_draw[i].y = - robot.e_tire[i].y * robot.v_tire[i] * scale_vec + robot.r_draw[i].y;
@@ -236,6 +238,7 @@ private:
             daiza_message.cylinder_states = {daiza_cyl12.get_value(), daiza_cyl12.get_value(), daiza_cyl3.get_value(), daiza_cyl4.get_value()};
             // publish hina
             auto hina_message = mecha_control::msg::ActuatorCommands();
+            hina_message.cylinder_states = {0, 0};
             hina_message.motor_expand = {hina_expand.get_value()};
             hina_message.motor_positions = {(hina_angle.get_value() -0.5)*PI, (servo1.get_value() -0.5)*PI, (servo2.get_value() - 0.5)*PI};
             // // publish mech state
@@ -310,10 +313,10 @@ private:
                 // label_hina_servo.draw();
                 // label_bonbori_seq.draw();
 
-                DrawSplineLinear(robot.r_draw, 4, 4.0f, GRAY);
+                DrawSplineLinear(robot.r_draw, 5, 4.0f, GRAY);
                 DrawSplineSegmentLinear(robot.origin, invert_y(robot.v_rec*scale)+robot.origin, 4.0f, PINK);
                 DrawCircleV(invert_y(robot.v_rec*scale)+robot.origin, 8.0f, PINK);
-                for (size_t i = 0; i < 3; i++)
+                for (size_t i = 0; i < 4; i++)
                 {
                     DrawSplineSegmentLinear(robot.r_draw[i], robot.v_tire_draw[i], 4.0f, BLUE);
                 }
@@ -321,7 +324,7 @@ private:
                 std::ostringstream ss;
                 ss << std::fixed;
                 ss << "v(" << robot.v_rec.x << ", " << robot.v_rec.y << ")" << std::endl << std::endl;
-                for (size_t i = 0; i < 3; i++)
+                for (size_t i = 0; i < 4; i++)
                 {
                     ss << "omega[" << i << "] : " << robot.v_tire[i] << std::endl;
                 }
@@ -335,7 +338,7 @@ private:
         //--------------------------------------------------------------------------------------
         CloseWindow();        // Close window and OpenGL context
         //--------------------------------------------------------------------------------------
-
+        rclcpp::shutdown();
         return ;
     }
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr omni_publisher_;
