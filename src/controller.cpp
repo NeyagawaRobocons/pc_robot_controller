@@ -52,7 +52,7 @@ private:
             float v_tire[4]; // vector of tire
             Vector2 v_tire_draw[4]; // vector of tire direction normarized
         } robot;
-        robot.origin = Vector2{screenWidth/2, screenHeight/2};
+        robot.origin = Vector2{screenWidth/2 - 200, screenHeight/2};
         robot.l = 0.3;
         robot.r_tire = 0.051;
         robot.r[0] = Vector2{robot.l * sqrtf32(2) * 0.5f, robot.l * sqrtf32(2) * 0.5f};
@@ -88,10 +88,14 @@ private:
         slider hina_angle({screenWidth -200, 220}, {screenWidth -70, 220}, 5.0f, BLUE, 0.5);
         slider servo1({screenWidth -200, 280}, {screenWidth -70, 280}, 5.0f, BLUE, 0.5);
         slider servo2({screenWidth -200, 340}, {screenWidth -70, 340}, 5.0f, BLUE, 0.5);
+        push_button hina_launch1({screenWidth -350, 100}, 130, 70, GRAY, PINK);
+        push_button hina_launch2({screenWidth -350, 200}, 130, 70, GRAY, PINK);
         label label_hina_expand("hina expand", {screenWidth -190, 125}, 20);
         label label_hina_angle("hina angle", {screenWidth -190, 190}, 20);
         label label_servo1("servo1", {screenWidth -190, 250}, 20);
         label label_servo2("servo2", {screenWidth -190, 310}, 20);
+        label label_hina_l1("hina launch1", {screenWidth -340, 125}, 20);
+        label label_hina_l2("hina launch2", {screenWidth -340, 225}, 20);
 
         // label title_mech("mech state", {screenWidth -210, 70}, 20);
         // push_button daiza_seq({screenWidth -250, 100}, 180, 70, GRAY, PINK);
@@ -138,10 +142,14 @@ private:
             hina_angle.move({screenWidth -200, 220});
             servo1.move({screenWidth -200, 280});
             servo2.move({screenWidth -200, 340});
+            hina_launch1.move({screenWidth -350, 100});
+            hina_launch2.move({screenWidth -350, 200});
             label_hina_expand.move({screenWidth -190, 125});
             label_hina_angle.move({screenWidth -190, 190});
             label_servo1.move({screenWidth -190, 250});
             label_servo2.move({screenWidth -190, 310});
+            label_hina_l1.move({screenWidth -340, 125});
+            label_hina_l2.move({screenWidth -340, 225});
             // title_mech.move({screenWidth -210, 70});
             // daiza_seq.move({screenWidth -250, 100});
             // hina_seq.move({screenWidth -250, 200});
@@ -172,6 +180,8 @@ private:
             hina_angle.process(mouse);
             servo1.process(mouse);
             servo2.process(mouse);
+            hina_launch1.process(mouse);
+            hina_launch2.process(mouse);
             // daiza_seq.process(mouse);
             // hina_seq.process(mouse);
             // hina_servo.process(mouse);
@@ -212,12 +222,12 @@ private:
                 }else{
                     robot.v_rec.x = 0;
                 }
-                robot.v_rec = normarize(robot.v_rec)*2.0;
+                robot.v_rec = normarize(robot.v_rec)*0.5;
             }
             if (IsKeyDown(KEY_Q)){
-                robot.rot = 4.0;
+                robot.rot = 1.0;
             }else if (IsKeyDown(KEY_E)){
-                robot.rot = -4.0;
+                robot.rot = -1.0;
             }else{
                 robot.rot = 0;
             }
@@ -238,7 +248,7 @@ private:
             daiza_message.cylinder_states = {daiza_cyl12.get_value(), daiza_cyl12.get_value(), daiza_cyl3.get_value(), daiza_cyl4.get_value()};
             // publish hina
             auto hina_message = mecha_control::msg::ActuatorCommands();
-            hina_message.cylinder_states = {0, 0};
+            hina_message.cylinder_states = {hina_launch1.get_value(), hina_launch2.get_value()};
             hina_message.motor_expand = {hina_expand.get_value()};
             std::cout << "hina_expand : " << hina_expand.get_value() << std::endl;
             hina_message.motor_positions = {(hina_angle.get_value() -0.5)*PI, (servo1.get_value() -0.5)*PI, (servo2.get_value() - 0.5)*PI};
@@ -300,10 +310,14 @@ private:
                 hina_angle.draw();
                 servo1.draw();
                 servo2.draw();
+                hina_launch1.draw();
+                hina_launch2.draw();
                 label_hina_expand.draw();
                 label_hina_angle.draw();
                 label_servo1.draw();
                 label_servo2.draw();
+                label_hina_l1.draw();
+                label_hina_l2.draw();
                 // title_mech.draw();
                 // daiza_seq.draw();
                 // hina_seq.draw();
