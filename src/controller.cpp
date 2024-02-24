@@ -1,7 +1,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "std_msgs/msg/float64_multi_array.hpp"
-#include "mecha_control/msg/actuator_commands.hpp"
+#include "nucleo_agent/msg/actuator_commands.hpp"
 #include "mecha_control/msg/mecha_state.hpp"
 #include <iostream>
 #include <thread>
@@ -19,8 +19,8 @@ class Controller : public rclcpp::Node {
 public:
     Controller() : Node("controller") {
         omni_publisher_ = this->create_publisher<std_msgs::msg::Float64MultiArray>("input_vel", 10);
-        daiza_publisher_ = this->create_publisher<mecha_control::msg::ActuatorCommands>("daiza_clamp", 10);
-        hina_publisher_ = this->create_publisher<mecha_control::msg::ActuatorCommands>("hina_dastpan", 10);
+        daiza_publisher_ = this->create_publisher<nucleo_agent::msg::ActuatorCommands>("daiza_clamp", 10);
+        hina_publisher_ = this->create_publisher<nucleo_agent::msg::ActuatorCommands>("hina_dastpan", 10);
         mecha_publisher_ = this->create_publisher<mecha_control::msg::MechaState>("mecha_state", 10);
         hina_servo_publisher_ = this->create_publisher<std_msgs::msg::String>("direct_mecha_command", 10);
         ui_thread_ = std::thread(&Controller::ui_main, this);
@@ -244,10 +244,10 @@ private:
                 robot.v_tire_draw[i].y = - robot.e_tire[i].y * robot.v_tire[i] * scale_vec + robot.r_draw[i].y;
             }
             //publish daiza
-            auto daiza_message = mecha_control::msg::ActuatorCommands();
+            auto daiza_message = nucleo_agent::msg::ActuatorCommands();
             daiza_message.cylinder_states = {daiza_cyl12.get_value(), daiza_cyl12.get_value(), daiza_cyl3.get_value(), daiza_cyl4.get_value()};
             // publish hina
-            auto hina_message = mecha_control::msg::ActuatorCommands();
+            auto hina_message = nucleo_agent::msg::ActuatorCommands();
             hina_message.cylinder_states = {hina_launch1.get_value(), hina_launch2.get_value()};
             hina_message.motor_expand = {hina_expand.get_value()};
             std::cout << "hina_expand : " << hina_expand.get_value() << std::endl;
@@ -357,8 +357,8 @@ private:
         return ;
     }
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr omni_publisher_;
-    rclcpp::Publisher<mecha_control::msg::ActuatorCommands>::SharedPtr daiza_publisher_;
-    rclcpp::Publisher<mecha_control::msg::ActuatorCommands>::SharedPtr hina_publisher_;
+    rclcpp::Publisher<nucleo_agent::msg::ActuatorCommands>::SharedPtr daiza_publisher_;
+    rclcpp::Publisher<nucleo_agent::msg::ActuatorCommands>::SharedPtr hina_publisher_;
     rclcpp::Publisher<mecha_control::msg::MechaState>::SharedPtr mecha_publisher_;
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr hina_servo_publisher_;
     rclcpp::TimerBase::SharedPtr timer_;
