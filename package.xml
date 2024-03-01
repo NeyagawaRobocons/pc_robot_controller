@@ -4,19 +4,26 @@
   <name>pc_robot_controller</name>
   <version>0.1.0</version>
   <description>TODO: Package description</description>
-  <maintainer email="tnt.kosen2423@gmail.com">tonto</maintainer>
+  <maintainer email="paripal5z34@gmail.com">paripal</maintainer>
   <license>TODO: License declaration</license>
 
-  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_auto</buildtool_depend>
 
   <depend>rclcpp</depend>
   <depend>rclpy</depend>
-  <depend>ament_cmake_python</depend>
   <depend>std_msgs</depend>
-  <depend>sensor_msgs</depend>
   <depend>rosidl_default_generators</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>tf2</depend>
+  <depend>tf2_ros</depend>
+  <depend>tf2_eigen</depend>
+  <depend>tf2_msgs</depend>
+  <depend>tf2_geometry_msgs</depend>
   <depend>mecha_control</depend>
   <depend>nucleo_agent</depend>
+  <depend>cclp</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

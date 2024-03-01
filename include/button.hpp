@@ -37,6 +37,9 @@ public:
         rec.x = origin.x;
         rec.y = origin.y;
     }
+    Rectangle get_rec(){
+        return rec;
+    }
     void draw(){
         DrawRectangleRec(rec, toggled ? color_toggled : color_untoggled);
     }
@@ -89,6 +92,9 @@ public:
     void move(Vector2 origin){
         rec.x = origin.x;
         rec.y = origin.y;
+    }
+    Rectangle get_rec(){
+        return rec;
     }
     void draw(){
         DrawRectangleRec(rec, pushed ? color_pushed : color_unpushed);
