@@ -9,8 +9,9 @@ private:
     bool toggled;
     Color color_untoggled;
     Color color_toggled;
+    float roundness;
 public:
-    toggle_button(Vector2 origin, float width, float height, Color color_untoggled, Color color_toggled, bool reset_value=false){
+    toggle_button(Vector2 origin, float width, float height, Color color_untoggled, Color color_toggled, bool reset_value=false, float roundness=0.0){
         this->rec.x = origin.x;
         this->rec.y = origin.y;
         this->rec.width = width;
@@ -18,6 +19,7 @@ public:
         this->color_toggled = color_toggled;
         this->color_untoggled = color_untoggled;
         this->toggled = reset_value;
+        this->roundness = roundness;
     }
     bool process(Vector2 mouse){
         if(CheckCollisionPointRec(mouse, rec)  && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))toggled = !toggled;
@@ -41,7 +43,7 @@ public:
         return rec;
     }
     void draw(){
-        DrawRectangleRec(rec, toggled ? color_toggled : color_untoggled);
+        DrawRectangleRounded(rec, roundness, 10, toggled ? color_toggled : color_untoggled);
     }
 };
 
@@ -53,8 +55,9 @@ private:
     bool pushed_last;
     Color color_unpushed;
     Color color_pushed;
+    float roundness;
 public:
-    push_button(Vector2 origin, float width, float height, Color color_unpushed, Color color_pushed, bool reset_value=false){
+    push_button(Vector2 origin, float width, float height, Color color_unpushed, Color color_pushed, bool reset_value=false, float roundness=0.0){
         this->rec.x = origin.x;
         this->rec.y = origin.y;
         this->rec.width = width;
@@ -62,6 +65,7 @@ public:
         this->color_pushed = color_pushed;
         this->color_unpushed = color_unpushed;
         this->pushed = reset_value;
+        this->roundness = roundness;
     }
     bool process(Vector2 mouse){
         pushed_last = pushed;
@@ -97,6 +101,6 @@ public:
         return rec;
     }
     void draw(){
-        DrawRectangleRec(rec, pushed ? color_pushed : color_unpushed);
+        DrawRectangleRounded(rec, roundness, 10, pushed ? color_pushed : color_unpushed);
     }
 };
