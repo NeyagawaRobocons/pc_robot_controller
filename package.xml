@@ -12,6 +12,7 @@
   <depend>rclcpp</depend>
   <depend>rclpy</depend>
   <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
   <depend>rosidl_default_generators</depend>
   <depend>sensor_msgs</depend>
   <depend>geometry_msgs</depend>
@@ -24,6 +25,7 @@
   <depend>mecha_control</depend>
   <depend>nucleo_agent</depend>
   <depend>cclp</depend>
+  <depend>pure_pursuit</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

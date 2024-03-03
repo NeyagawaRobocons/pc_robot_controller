@@ -15,6 +15,12 @@
 #include "nucleo_agent/msg/actuator_commands.hpp"
 #include "cclp/msg/line_array.hpp"
 #include "cclp/msg/map_request.hpp"
+#include "pure_pursuit/msg/path2_d_with_speed.hpp"
+#include "mecha_control/msg/mech_action.hpp"
+#include "pure_pursuit/action/path_and_feedback.hpp"
+#include "mecha_control/action/daiza_cmd.hpp"
+#include "mecha_control/action/hina_cmd.hpp"
+#include "std_srvs/srv/set_bool.hpp"
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
 
@@ -25,12 +31,14 @@
 #include "touch.hpp"
 #include "robot.hpp"
 #include "pose_adjust.hpp"
+#include "robot_action.hpp"
+#include "robot_action_list.hpp"
 #include "cclp/include/lines_and_points.hpp"
 
 
 class AutoController : public rclcpp::Node {
 public:
-    AutoController() : Node("auto_controller") {
+    AutoController() : Node("auto_controller"), robot_actions_manager_(path_and_feedback_client_, daiza_cmd_client_, hina_cmd_client_, bonbori_srv_client_) {
         std::string input_vel_topic = this->declare_parameter("input_vel_topic", "input_vel");
         std::string robot_vel_topic = this->declare_parameter("robot_vel_topic", "robot_vel");
         std::string path_topic = this->declare_parameter("path_topic", "robot_path");
@@ -57,9 +65,15 @@ public:
             line_map, 10, std::bind(&AutoController::line_map_callback, this, std::placeholders::_1));
         map_request_pub_ = this->create_publisher<cclp::msg::MapRequest>(map_request, 10);
         mouse_point_pub_ = this->create_publisher<geometry_msgs::msg::Pose>(mouse_point_pub, 10);
+        path_and_feedback_client_ = rclcpp_action::create_client<pure_pursuit::action::PathAndFeedback>(this, "path_and_feedback");
+        daiza_cmd_client_ = rclcpp_action::create_client<mecha_control::action::DaizaCmd>(this, "daiza_cmd");
+        hina_cmd_client_ = rclcpp_action::create_client<mecha_control::action::HinaCmd>(this, "hina_cmd");
+        bonbori_srv_client_ = this->create_client<std_srvs::srv::SetBool>("set_bonbori");
         // Create a tf buffer and listener
         tf_buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
         tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
+
+        
 
         ui_thread_ = std::thread(&AutoController::ui_main, this);
     }
@@ -72,6 +86,10 @@ private:
     rclcpp::Subscription<cclp::msg::LineArray>::SharedPtr line_map_sub_;
     rclcpp::Publisher<cclp::msg::MapRequest>::SharedPtr map_request_pub_;
     rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr mouse_point_pub_;
+    rclcpp_action::Client<pure_pursuit::action::PathAndFeedback>::SharedPtr path_and_feedback_client_;
+    rclcpp_action::Client<mecha_control::action::DaizaCmd>::SharedPtr daiza_cmd_client_;
+    rclcpp_action::Client<mecha_control::action::HinaCmd>::SharedPtr hina_cmd_client_;
+    rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr bonbori_srv_client_;
     std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
     std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
     std::string map_frame_;
@@ -86,6 +104,7 @@ private:
     Vector3 robot_vec_;
     float input_vel_[4];
     std::vector<Line> path_;
+    RobotActionsManager robot_actions_manager_;
 
 
     // lidar1 parameters
@@ -133,6 +152,21 @@ private:
         push_button req_right_map({screenWidth / 2 + 400, screenHeight - 400}, 250, 70, GRAY, BLUE, false, 0.5);
         label req_right_map_label("request right map", {screenWidth / 2 + 400 + 10, screenHeight - 400 + 25}, 20, BLACK);
 
+        push_button daiza({screenWidth / 2 + 400, 600}, 250, 70, GRAY, BLUE, false, 0.5);
+        label daiza_label("daiza clamp", {screenWidth / 2 + 400 + 10, screenHeight - 800 + 25}, 20, BLACK);
+        label daiza_status("", {screenWidth / 2 + 400 + 10, screenHeight - 700 + 25}, 20, BLACK);
+
+        RobotActionList ra_list({100, screenHeight - 600}, std::string("test"), &robot_actions_manager_);
+        auto daiza_cmd = mecha_control::msg::MechAction();
+        daiza_cmd.type = mecha_control::msg::MechAction::DAIZA;
+        daiza_cmd.daiza.command = mecha_control::msg::DaizaCmdType::CLAMP;
+        ra_list.add_action(RobotAction(daiza_cmd, daiza_cmd_client_, hina_cmd_client_, bonbori_srv_client_), std::string("daiza clamp"));
+        auto hina_cmd = mecha_control::msg::MechAction();
+        hina_cmd.type = mecha_control::msg::MechAction::HINA;
+        hina_cmd.hina.command = mecha_control::msg::HinaCmdType::UP;
+        ra_list.add_action(RobotAction(hina_cmd, daiza_cmd_client_, hina_cmd_client_, bonbori_srv_client_), std::string("hina up"));
+        ra_list.append_action_to_manager();
+
         // slider sl({1000, 400}, {1100, 400}, 5.0f, BLUE);
         // toggle_button tb({1000, 300}, 100, 50, GRAY, BLUE);
 
@@ -161,11 +195,16 @@ private:
             req_left_map_label.move({screenWidth / 2 + 400 + 10, screenHeight - 500 + 25});
             req_right_map.move({screenWidth / 2 + 400, screenHeight - 400});
             req_right_map_label.move({screenWidth / 2 + 400 + 10, screenHeight - 400 + 25});
+            daiza.move({screenWidth / 2 + 400, screenHeight - 800});
+            daiza_label.move({screenWidth / 2 + 400 + 10, screenHeight - 800 + 25});
+            daiza_status.move({screenWidth / 2 + 400 + 10, screenHeight - 700 + 25});
 
             Vector2 mouse = GetMousePosition();
             pa_enable.process(mouse);
             req_left_map.process(mouse);
             req_right_map.process(mouse);
+            daiza.process(mouse);
+            ra_list.process(mouse);
 
             if(pa_enable.get_value() && !CheckCollisionPointRec(mouse, pa_enable.get_rec())){
                 if (pa.process(mouse)){
@@ -185,6 +224,17 @@ private:
                 req.map = cclp::msg::MapRequest::MAP_RIGHT;
                 map_request_pub_->publish(req);
             }
+
+            if(daiza.is_pressed()){
+                auto daiza_cmd = mecha_control::msg::MechAction();
+                daiza_cmd.type = mecha_control::msg::MechAction::DAIZA;
+                daiza_cmd.daiza.command = mecha_control::msg::DaizaCmdType::CLAMP;
+                robot_actions_manager_.addRobotAction(RobotAction(daiza_cmd, daiza_cmd_client_, hina_cmd_client_, bonbori_srv_client_));
+                robot_actions_manager_.executeRobotAction(0);
+            }
+            robot_actions_manager_.process();
+            std::string status = robot_actions_manager_.getStatus();
+            daiza_status.set_text(status.c_str());
 
             Vector3 tf_vec3;
             std::string err_tf;
@@ -250,6 +300,10 @@ private:
                 req_left_map_label.draw();
                 req_right_map.draw();
                 req_right_map_label.draw();
+                daiza.draw();
+                daiza_label.draw();
+                daiza_status.draw();
+                ra_list.draw();
 
                 std::stringstream ss;
                 ss << "FPS" << GetFPS() << std::endl << std::endl;
