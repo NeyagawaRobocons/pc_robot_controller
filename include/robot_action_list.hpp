@@ -37,13 +37,14 @@ public:
         std::stringstream ss;
         std::string status = manager->getStatus();
         ss << "Status: " << status;
-        DrawText(ss.str().c_str(), origin.x, origin.y + 30, 20, BLACK);
-        DrawText("Actions:", origin.x, origin.y + 55, 20, BLACK);
+        DrawText(ss.str().c_str(), origin.x, origin.y + 80, 20, BLACK);
+        DrawText("Actions:", origin.x, origin.y + 105, 20, BLACK);
         for (size_t i = 0; i < action_names.size(); i++)
         {
-            DrawText(action_names[i].c_str(), origin.x, origin.y + 80 + 25 * i, 20, BLACK);
+            DrawText(action_names[i].c_str(), origin.x, origin.y + 135 + 25 * i, 20, manager->isFinishedAction(i) ? BLACK : GRAY);
         }
         start_button.draw();
+        DrawRectangleRoundedLines({origin.x - 5, origin.y - 5, 300.0 + 5.0, 135.0 + action_names.size() *25 + 5}, 0.1, 50, 4.0, GRAY);
     }
 private:
     RobotActionsManager *manager;

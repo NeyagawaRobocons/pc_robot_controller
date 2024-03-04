@@ -18,6 +18,7 @@
 #include "pure_pursuit/msg/path2_d_with_speed.hpp"
 #include "mecha_control/msg/mech_action.hpp"
 #include "pure_pursuit/action/path_and_feedback.hpp"
+#include "pure_pursuit/srv/get_path.hpp"
 #include "mecha_control/action/daiza_cmd.hpp"
 #include "mecha_control/action/hina_cmd.hpp"
 #include "std_srvs/srv/set_bool.hpp"
@@ -34,6 +35,7 @@
 #include "robot_action.hpp"
 #include "robot_action_list.hpp"
 #include "cclp/include/lines_and_points.hpp"
+#include "../include/robot_action.hpp"
 
 
 class AutoController : public rclcpp::Node {
@@ -65,6 +67,7 @@ public:
             line_map, 10, std::bind(&AutoController::line_map_callback, this, std::placeholders::_1));
         map_request_pub_ = this->create_publisher<cclp::msg::MapRequest>(map_request, 10);
         mouse_point_pub_ = this->create_publisher<geometry_msgs::msg::Pose>(mouse_point_pub, 10);
+        get_path_client_ = this->create_client<pure_pursuit::srv::GetPath>("get_path");
         path_and_feedback_client_ = rclcpp_action::create_client<pure_pursuit::action::PathAndFeedback>(this, "path_and_feedback");
         daiza_cmd_client_ = rclcpp_action::create_client<mecha_control::action::DaizaCmd>(this, "daiza_cmd");
         hina_cmd_client_ = rclcpp_action::create_client<mecha_control::action::HinaCmd>(this, "hina_cmd");
@@ -86,6 +89,7 @@ private:
     rclcpp::Subscription<cclp::msg::LineArray>::SharedPtr line_map_sub_;
     rclcpp::Publisher<cclp::msg::MapRequest>::SharedPtr map_request_pub_;
     rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr mouse_point_pub_;
+    rclcpp::Client<pure_pursuit::srv::GetPath>::SharedPtr get_path_client_;
     rclcpp_action::Client<pure_pursuit::action::PathAndFeedback>::SharedPtr path_and_feedback_client_;
     rclcpp_action::Client<mecha_control::action::DaizaCmd>::SharedPtr daiza_cmd_client_;
     rclcpp_action::Client<mecha_control::action::HinaCmd>::SharedPtr hina_cmd_client_;
@@ -130,6 +134,7 @@ private:
         //--------------------------------------------------------------------------------------
         int screenWidth = 1920;
         int screenHeight = 1080;
+        SetTargetFPS(60);
 
         SetConfigFlags(FLAG_WINDOW_RESIZABLE);
         SetConfigFlags(FLAG_WINDOW_MAXIMIZED);
@@ -142,7 +147,7 @@ private:
         float map_draw_scale = 100;
         Vector2 map_draw_origin = {(float)screenWidth / 2, (float)screenHeight - 400};
 
-        RobotChassis4 robot({300, screenHeight / 2}, scale, 0.3, 0.3 * 0.051, 0.5, RED);
+        RobotChassis4 robot({300, 300}, scale, 0.3, 0.3 * 0.051, 0.5, RED);
         PoseAdjust pa(map_draw_origin, map_draw_scale);
         toggle_button pa_enable({screenWidth / 2 + 400, screenHeight - 200}, 250, 70, GRAY, BLUE, false, 0.5);
         label pa_enable_label("initial pose", {screenWidth / 2 + 400 + 10, screenHeight - 200 + 25}, 20, BLACK);
@@ -156,23 +161,92 @@ private:
         label daiza_label("daiza clamp", {screenWidth / 2 + 400 + 10, screenHeight - 800 + 25}, 20, BLACK);
         label daiza_status("", {screenWidth / 2 + 400 + 10, screenHeight - 700 + 25}, 20, BLACK);
 
+        PathCallers path_callers(get_path_client_);
+        std::vector<uint8_t> path_names;
+        path_names.push_back(pure_pursuit::srv::GetPath::Request::RIGHT_DAIZA_COLLECT);
+        path_names.push_back(pure_pursuit::srv::GetPath::Request::RIGHT_DAIZA_PLACE);
+        path_names.push_back(pure_pursuit::srv::GetPath::Request::RIGHT_HINA_COLLECT);
+        path_names.push_back(pure_pursuit::srv::GetPath::Request::RIGHT_HINA_PLACE);
+        path_names.push_back(pure_pursuit::srv::GetPath::Request::RIGHT_HINA_PLACE_RETRY);
+        path_names.push_back(pure_pursuit::srv::GetPath::Request::LEFT_DAIZA_COLLECT);
+        path_names.push_back(pure_pursuit::srv::GetPath::Request::LEFT_DAIZA_PLACE);
+        path_names.push_back(pure_pursuit::srv::GetPath::Request::LEFT_HINA_COLLECT);
+        path_names.push_back(pure_pursuit::srv::GetPath::Request::LEFT_HINA_PLACE);
+        path_names.push_back(pure_pursuit::srv::GetPath::Request::LEFT_HINA_PLACE_RETRY);
+        path_callers.RequestPaths(path_names);
+        while(!path_callers.isFinished() && !WindowShouldClose() && rclcpp::ok()){
+            // rclcpp::spin_some(this->get_node_base_interface());
+            BeginDrawing();
+            ClearBackground(RAYWHITE);
+            std::stringstream ss;
+            ss << "Loading paths..." << std::endl;
+            ss << "Loaded" << path_callers.getOkNum() << " / " << path_callers.getRequestNum() << std::endl;
+            DrawText("Loading paths...", 10, 10, 20, GRAY);
+            EndDrawing();
+        }
+        
+
         RobotActionList ra_list({100, screenHeight - 600}, std::string("test"), &robot_actions_manager_);
-        auto daiza_cmd = mecha_control::msg::MechAction();
-        daiza_cmd.type = mecha_control::msg::MechAction::DAIZA;
-        daiza_cmd.daiza.command = mecha_control::msg::DaizaCmdType::CLAMP;
-        ra_list.add_action(RobotAction(daiza_cmd, daiza_cmd_client_, hina_cmd_client_, bonbori_srv_client_), std::string("daiza clamp"));
-        auto hina_cmd = mecha_control::msg::MechAction();
-        hina_cmd.type = mecha_control::msg::MechAction::HINA;
-        hina_cmd.hina.command = mecha_control::msg::HinaCmdType::UP;
-        ra_list.add_action(RobotAction(hina_cmd, daiza_cmd_client_, hina_cmd_client_, bonbori_srv_client_), std::string("hina up"));
+
+        ra_list.add_action(RobotAction(
+            path_callers.getPath(pure_pursuit::srv::GetPath::Request::LEFT_DAIZA_COLLECT),
+            path_callers.GetMechActionPath(pure_pursuit::srv::GetPath::Request::LEFT_DAIZA_COLLECT),
+            path_and_feedback_client_, daiza_cmd_client_, hina_cmd_client_, bonbori_srv_client_
+        ), std::string("collect daiza"));
+
+        auto daiza_take = mecha_control::msg::MechAction();
+        daiza_take.type = mecha_control::msg::MechAction::DAIZA;
+        daiza_take.daiza.command = mecha_control::msg::DaizaCmdType::CLAMP_AND_CONTRACT;
+        ra_list.add_action(RobotAction(daiza_take, daiza_cmd_client_, hina_cmd_client_, bonbori_srv_client_), std::string("daiza clamp"));
+
+        ra_list.add_action(RobotAction(
+            path_callers.getPath(pure_pursuit::srv::GetPath::Request::LEFT_DAIZA_PLACE),
+            path_callers.GetMechActionPath(pure_pursuit::srv::GetPath::Request::LEFT_DAIZA_PLACE),
+            path_and_feedback_client_, daiza_cmd_client_, hina_cmd_client_, bonbori_srv_client_
+        ), std::string("place daiza"));
+
+        auto daiza_contract = mecha_control::msg::MechAction();
+        daiza_contract.type = mecha_control::msg::MechAction::DAIZA;
+        daiza_contract.daiza.command = mecha_control::msg::DaizaCmdType::READY;
+        ra_list.add_action(RobotAction(daiza_contract, daiza_cmd_client_, hina_cmd_client_, bonbori_srv_client_), std::string("daiza clamp"));
+
+        ra_list.add_action(RobotAction(
+            path_callers.getPath(pure_pursuit::srv::GetPath::Request::LEFT_HINA_COLLECT),
+            path_callers.GetMechActionPath(pure_pursuit::srv::GetPath::Request::LEFT_HINA_COLLECT),
+            path_and_feedback_client_, daiza_cmd_client_, hina_cmd_client_, bonbori_srv_client_
+        ), std::string("collect hina"));
+
+        auto hina_take = mecha_control::msg::MechAction();
+        hina_take.type = mecha_control::msg::MechAction::HINA;
+        hina_take.hina.command = mecha_control::msg::HinaCmdType::UP_AND_CARRY;
+        ra_list.add_action(RobotAction(hina_take, daiza_cmd_client_, hina_cmd_client_, bonbori_srv_client_), std::string("hina up"));
+
+        ra_list.add_action(RobotAction(
+            path_callers.getPath(pure_pursuit::srv::GetPath::Request::LEFT_HINA_PLACE),
+            path_callers.GetMechActionPath(pure_pursuit::srv::GetPath::Request::LEFT_HINA_PLACE),
+            path_and_feedback_client_, daiza_cmd_client_, hina_cmd_client_, bonbori_srv_client_
+        ), std::string("place hina"));
+
+        auto hina_place_pos = mecha_control::msg::MechAction();
+        hina_place_pos.type = mecha_control::msg::MechAction::HINA;
+        hina_place_pos.hina.command = mecha_control::msg::HinaCmdType::READY;
+        ra_list.add_action(RobotAction(hina_place_pos, daiza_cmd_client_, hina_cmd_client_, bonbori_srv_client_), std::string("hina ready"));
+
+        auto hina_launch = mecha_control::msg::MechAction();
+        hina_launch.type = mecha_control::msg::MechAction::HINA;
+        hina_launch.hina.command = mecha_control::msg::HinaCmdType::LATCH_UNLOCK;
+        ra_list.add_action(RobotAction(hina_launch, daiza_cmd_client_, hina_cmd_client_, bonbori_srv_client_), std::string("hina launch"));
+
+        auto hina_ready = mecha_control::msg::MechAction();
+        hina_ready.type = mecha_control::msg::MechAction::HINA;
+        hina_ready.hina.command = mecha_control::msg::HinaCmdType::READY;
+        ra_list.add_action(RobotAction(hina_ready, daiza_cmd_client_, hina_cmd_client_, bonbori_srv_client_), std::string("hina up"));
         ra_list.append_action_to_manager();
 
         // slider sl({1000, 400}, {1100, 400}, 5.0f, BLUE);
         // toggle_button tb({1000, 300}, 100, 50, GRAY, BLUE);
 
         int count = 0;
-
-        SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
         //--------------------------------------------------------------------------------------
 
         // Main game loop
@@ -185,7 +259,7 @@ private:
             screenHeight = GetScreenHeight();
 
             map_draw_origin = {(float)screenWidth / 2, (float)screenHeight - 400};
-            robot.set_pos({300, screenHeight / 2});
+            robot.set_pos({300, 300});
             robot.set_vel(robot_vec_.x, robot_vec_.y, robot_vec_.z);
             robot.set_wheels_vel(input_vel_);
             pa.set_map_draw_origin(map_draw_origin);

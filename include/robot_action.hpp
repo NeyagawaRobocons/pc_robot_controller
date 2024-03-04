@@ -3,6 +3,7 @@
 #include <rclcpp_action/rclcpp_action.hpp>
 #include "pure_pursuit/msg/path2_d_with_speed.hpp"
 #include "mecha_control/msg/mech_action.hpp"
+#include "pure_pursuit/srv/get_path.hpp"
 #include "pure_pursuit/action/path_and_feedback.hpp"
 #include "mecha_control/action/daiza_cmd.hpp"
 #include "mecha_control/action/hina_cmd.hpp"
@@ -143,13 +144,13 @@ public:
             return [](rclcpp_action::ClientGoalHandle<pure_pursuit::action::PathAndFeedback>::SharedPtr, const std::shared_ptr<const pure_pursuit::action::PathAndFeedback::Feedback>, rclcpp_action::Client<mecha_control::action::DaizaCmd>::SendGoalOptions, rclcpp_action::Client<mecha_control::action::HinaCmd>::SendGoalOptions){};
         }
     }
-    std::function<void(const rclcpp_action::ClientGoalHandle<pure_pursuit::action::PathAndFeedback>::WrappedResult &)> get_move_path_result_callback() {
+    std::function<void(const rclcpp_action::ClientGoalHandle<pure_pursuit::action::PathAndFeedback>::WrappedResult &, rclcpp_action::Client<mecha_control::action::DaizaCmd>::SendGoalOptions, rclcpp_action::Client<mecha_control::action::HinaCmd>::SendGoalOptions)> get_move_path_result_callback() {
         if(action_type_ == ActionType::MOVE_PATH){
             return std::bind(&RobotAction::executeMovePath_result_callback, this, std::placeholders::_1);
         } else if(action_type_ == ActionType::MOVE_PATH_WITH_MECH_ACTION){
-            return std::bind(&RobotAction::executeMovePathWithMechAction_result_callback, this, std::placeholders::_1);
+            return std::bind(&RobotAction::executeMovePathWithMechAction_result_callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
         } else {
-            return [](const rclcpp_action::ClientGoalHandle<pure_pursuit::action::PathAndFeedback>::WrappedResult &){};
+            return [](const rclcpp_action::ClientGoalHandle<pure_pursuit::action::PathAndFeedback>::WrappedResult &, rclcpp_action::Client<mecha_control::action::DaizaCmd>::SendGoalOptions, rclcpp_action::Client<mecha_control::action::HinaCmd>::SendGoalOptions){};
         }
     }
     std::function<void(rclcpp_action::ClientGoalHandle<mecha_control::action::DaizaCmd>::SharedPtr, const std::shared_ptr<const mecha_control::action::DaizaCmd::Feedback>)> get_daiza_feedback_callback() {
@@ -245,17 +246,23 @@ private:
             path_current_index_ = feedback->current_index;
             ss << "Feedback: " << path_current_index_;
             status_ = ss.str();
-            if(mech_action_path_.mech_action_indices.size() > 0){
+            while(mech_action_path_.mech_action_indices.size() > 0){
                 if(path_current_index_ >= mech_action_path_.mech_action_indices[0]){
                     mech_action_ = mech_action_path_.mech_actions_path[0];
                     executeMechAction(daiza_cmd_send_goal_options, hina_cmd_send_goal_options);
                     mech_action_path_.mech_action_indices.erase(mech_action_path_.mech_action_indices.begin());
                     mech_action_path_.mech_actions_path.erase(mech_action_path_.mech_actions_path.begin());
                 }
+                if(mech_action_path_.mech_action_indices.size() == 0){
+                    break;
+                }
             }
         }
     }
-    void executeMovePathWithMechAction_result_callback(const rclcpp_action::ClientGoalHandle<pure_pursuit::action::PathAndFeedback>::WrappedResult & result){
+    void executeMovePathWithMechAction_result_callback(const rclcpp_action::ClientGoalHandle<pure_pursuit::action::PathAndFeedback>::WrappedResult & result,
+        rclcpp_action::Client<mecha_control::action::DaizaCmd>::SendGoalOptions daiza_cmd_send_goal_options,
+        rclcpp_action::Client<mecha_control::action::HinaCmd>::SendGoalOptions hina_cmd_send_goal_options
+        ){
         if(result.goal_id == move_path_goal_uuid_){
             std::stringstream ss;
             switch (result.code) {
@@ -265,7 +272,7 @@ private:
                     while(mech_action_path_.mech_action_indices.size() > 0){
                         if(path_current_index_ >= mech_action_path_.mech_action_indices[0]){
                             mech_action_ = mech_action_path_.mech_actions_path[0];
-                            executeMechAction(rclcpp_action::Client<mecha_control::action::DaizaCmd>::SendGoalOptions(), rclcpp_action::Client<mecha_control::action::HinaCmd>::SendGoalOptions());
+                            executeMechAction(daiza_cmd_send_goal_options, hina_cmd_send_goal_options);
                             mech_action_path_.mech_action_indices.erase(mech_action_path_.mech_action_indices.begin());
                             mech_action_path_.mech_actions_path.erase(mech_action_path_.mech_actions_path.begin());
                         }
@@ -490,7 +497,7 @@ public:
     };
     void executeRobotAction(size_t index) {
         if(index < robot_actions_.size()){
-            auto robot_action = robot_actions_[index];
+            auto robot_action = &robot_actions_[index];
             auto move_path_send_goal_options = rclcpp_action::Client<pure_pursuit::action::PathAndFeedback>::SendGoalOptions();
             auto daiza_cmd_send_goal_options = rclcpp_action::Client<mecha_control::action::DaizaCmd>::SendGoalOptions();
             auto hina_cmd_send_goal_options = rclcpp_action::Client<mecha_control::action::HinaCmd>::SendGoalOptions();
@@ -500,15 +507,15 @@ public:
             hina_cmd_send_goal_options.result_callback = std::bind(&RobotActionsManager::hina_result_callback, this, std::placeholders::_1);
             move_path_send_goal_options.feedback_callback = std::bind(&RobotActionsManager::move_path_feedback_callback, this, std::placeholders::_1, std::placeholders::_2);
             move_path_send_goal_options.result_callback = std::bind(&RobotActionsManager::move_path_result_callback, this, std::placeholders::_1);
-            robot_action.execute(move_path_send_goal_options, daiza_cmd_send_goal_options, hina_cmd_send_goal_options);
+            robot_action->execute(move_path_send_goal_options, daiza_cmd_send_goal_options, hina_cmd_send_goal_options);
             robot_actions_index_ = index;
-            robot_actions_[robot_actions_index_].move_path_goal_uuid_ = robot_action.move_path_goal_uuid_;
-            robot_actions_[robot_actions_index_].daiza_cmd_goal_uuid_ = robot_action.daiza_cmd_goal_uuid_;
-            robot_actions_[robot_actions_index_].hina_cmd_goal_uuid_ = robot_action.hina_cmd_goal_uuid_;
-            robot_actions_[robot_actions_index_].bonbori_srv_request_id_ = robot_action.bonbori_srv_request_id_;
-            robot_actions_[robot_actions_index_].finished_ = robot_action.finished_;
-            robot_actions_[robot_actions_index_].status_ = robot_action.status_;
-            running_robot_action_ = &robot_action;
+            // robot_actions_[robot_actions_index_].move_path_goal_uuid_ = robot_action->move_path_goal_uuid_;
+            // robot_actions_[robot_actions_index_].daiza_cmd_goal_uuid_ = robot_action->daiza_cmd_goal_uuid_;
+            // robot_actions_[robot_actions_index_].hina_cmd_goal_uuid_ = robot_action->hina_cmd_goal_uuid_;
+            // robot_actions_[robot_actions_index_].bonbori_srv_request_id_ = robot_action->bonbori_srv_request_id_;
+            // robot_actions_[robot_actions_index_].finished_ = robot_action->finished_;
+            // robot_actions_[robot_actions_index_].status_ = robot_action->status_;
+            // running_robot_action_ = robot_action;
         }
     };
     void executeRobotActions(size_t index_from=0) {
@@ -540,11 +547,17 @@ public:
         }
     };
     std::string getStatus() {
-        if(running_robot_action_ != nullptr && robot_actions_index_ < robot_actions_.size()){
+        if(robot_actions_index_ < robot_actions_.size()){
             // std::cout << running_robot_action_->getStatus() << std::endl;
             return robot_actions_[robot_actions_index_].getStatus();
         }
         return "done";
+    };
+    bool isFinishedAction(size_t index) {
+        if(index < robot_actions_.size()){
+            return robot_actions_[index].isFinished();
+        }
+        return true;
     };
     bool isFinished() {
         return !running_executeRobotActions_;
@@ -561,7 +574,7 @@ private:
     rclcpp_action::Client<mecha_control::action::HinaCmd>::SharedPtr hina_cmd_action_client_;
     rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr bonbori_srv_client_;
     std::vector<RobotAction> robot_actions_;
-    RobotAction *running_robot_action_;
+    // RobotAction *running_robot_action_;
     size_t robot_actions_index_;
     bool running_executeRobotActions_ = false;
     size_t robot_actions_index_to_;
@@ -596,9 +609,99 @@ private:
         }
     }
     void move_path_result_callback(const rclcpp_action::ClientGoalHandle<pure_pursuit::action::PathAndFeedback>::WrappedResult & result){
+        auto daiza_cmd_send_goal_options = rclcpp_action::Client<mecha_control::action::DaizaCmd>::SendGoalOptions();
+        auto hina_cmd_send_goal_options = rclcpp_action::Client<mecha_control::action::HinaCmd>::SendGoalOptions();
+        daiza_cmd_send_goal_options.feedback_callback = std::bind(&RobotActionsManager::daiza_feedback_callback, this, std::placeholders::_1, std::placeholders::_2);
+        daiza_cmd_send_goal_options.result_callback = std::bind(&RobotActionsManager::daiza_result_callback, this, std::placeholders::_1);
         for(auto &robot_action : robot_actions_){
-            robot_action.get_move_path_result_callback() (result);
+            robot_action.get_move_path_result_callback() (result, daiza_cmd_send_goal_options, hina_cmd_send_goal_options);
         }
+    }
+};
+
+class PathCallers
+{
+public:
+    PathCallers(rclcpp::Client<pure_pursuit::srv::GetPath>::SharedPtr get_path_client) : get_path_client_(get_path_client) {
+    };
+    void RequestPath(uint8_t path_name) {
+        if (!get_path_client_->service_is_ready()) {
+            return;
+        }
+        request_num_++;
+        auto request = std::make_shared<pure_pursuit::srv::GetPath::Request>();
+        request->path_number = path_name;
+        auto result = get_path_client_->async_send_request(request, std::bind(&PathCallers::get_path_result_callback, this, std::placeholders::_1));
+    };
+    void RequestPaths(std::vector<uint8_t> path_names) {
+        for(auto path_name : path_names){
+            RequestPath(path_name);
+        }
+    };
+    bool isFinished() {
+        if(request_num_ == ok_num_){
+            return true;
+        }
+        return false;
+    };
+    std::vector<pure_pursuit::msg::Path2DWithParams> getPaths() {
+        return paths_;
+    };
+    pure_pursuit::msg::Path2DWithParams getPath(uint8_t path_name) {
+        for(size_t i = 0; i < path_number_.size(); i++){
+            if(path_number_[i] == path_name){
+                return paths_[i];
+            }
+        }
+        return pure_pursuit::msg::Path2DWithParams();
+    };
+    RobotAction::MechActionPath GetMechActionPath(uint8_t path_name) {
+        for(size_t i = 0; i < path_number_.size(); i++){
+            if(path_number_[i] == path_name){
+                return mech_action_paths_[i];
+            }
+        }
+        return RobotAction::MechActionPath();
+    }
+    int getOkNum() {
+        return ok_num_;
+    };
+    int getRequestNum() {
+        return request_num_;
+    };
+private:
+    rclcpp::Client<pure_pursuit::srv::GetPath>::SharedPtr get_path_client_;
+    std::vector<uint8_t> path_number_;
+    int request_num_ = 0;
+    int ok_num_ = 0;
+    std::vector<pure_pursuit::msg::Path2DWithParams> paths_;
+    std::vector<RobotAction::MechActionPath> mech_action_paths_;
+    void get_path_result_callback(rclcpp::Client<pure_pursuit::srv::GetPath>::SharedFutureWithRequest future){
+        auto result = future.get();
+        path_number_.push_back(result.first.get()->path_number);
+        paths_.push_back(result.second.get()->path);
+        RobotAction::MechActionPath mech_action_path{};
+        for(size_t i = 0; i < result.second.get()->indices.size(); i++){
+            mech_action_path.mech_action_indices.push_back(result.second.get()->indices[i]);
+            mecha_control::msg::MechAction mech_action_daiza{};
+            mech_action_daiza.type = mecha_control::msg::MechAction::DAIZA;
+            mech_action_daiza.daiza.command = result.second.get()->daiza_commands[i];
+            mech_action_path.mech_actions_path.push_back(mech_action_daiza);
+
+            mech_action_path.mech_action_indices.push_back(result.second.get()->indices[i]);
+            mecha_control::msg::MechAction mech_action_hina{};
+            mech_action_hina.type = mecha_control::msg::MechAction::HINA;
+            mech_action_hina.hina.command = result.second.get()->hina_commands[i];
+            mech_action_path.mech_actions_path.push_back(mech_action_hina);
+
+            mech_action_path.mech_action_indices.push_back(result.second.get()->indices[i]);
+            mecha_control::msg::MechAction mech_action_bonbori{};
+            mech_action_bonbori.type = mecha_control::msg::MechAction::BONBORI;
+            mech_action_bonbori.bonbori_enable = result.second.get()->bonbori_commands[i];
+            mech_action_path.mech_actions_path.push_back(mech_action_bonbori);
+        }
+        mech_action_paths_.push_back(mech_action_path);
+        ok_num_++;
     }
 };
 

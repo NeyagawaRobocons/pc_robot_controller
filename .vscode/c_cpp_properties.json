@@ -6,12 +6,11 @@
                 "limitSymbolsToIncludedHeaders": false
             },
             "includePath": [
-                "/home/nwrc/ros2_ws/install/nucleo_agent/include/**",
+                "/home/nwrc/ros_ws/install/nucleo_agent/include/**",
                 "/opt/ros/humble/include/**",
-                "/home/nwrc/ros2_ws/src/nucleo_agent/include/**",
-                "/home/nwrc/ros2_ws/build/**",
+                "/home/nwrc/ros_ws/install/**",
                 "/usr/include/**",
-                "/home/nwrc/ros2_ws/build/mecha_control/rosidl_generator_cpp"
+                "/home/nwrc/ros_ws/install/mecha_control/include/**"
             ],
             "name": "ROS",
             "intelliSenseMode": "gcc-x64",
