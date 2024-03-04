@@ -158,7 +158,7 @@ private:
         label req_right_map_label("request right map", {screenWidth / 2 + 400 + 10, screenHeight - 400 + 25}, 20, BLACK);
 
         push_button daiza({screenWidth / 2 + 400, 600}, 250, 70, GRAY, BLUE, false, 0.5);
-        label daiza_label("daiza clamp", {screenWidth / 2 + 400 + 10, screenHeight - 800 + 25}, 20, BLACK);
+        label daiza_label("collect daiza", {screenWidth / 2 + 400 + 10, screenHeight - 800 + 25}, 20, BLACK);
         label daiza_status("", {screenWidth / 2 + 400 + 10, screenHeight - 700 + 25}, 20, BLACK);
 
         PathCallers path_callers(get_path_client_);
@@ -300,10 +300,6 @@ private:
             }
 
             if(daiza.is_pressed()){
-                auto daiza_cmd = mecha_control::msg::MechAction();
-                daiza_cmd.type = mecha_control::msg::MechAction::DAIZA;
-                daiza_cmd.daiza.command = mecha_control::msg::DaizaCmdType::CLAMP;
-                robot_actions_manager_.addRobotAction(RobotAction(daiza_cmd, daiza_cmd_client_, hina_cmd_client_, bonbori_srv_client_));
                 robot_actions_manager_.executeRobotAction(0);
             }
             robot_actions_manager_.process();

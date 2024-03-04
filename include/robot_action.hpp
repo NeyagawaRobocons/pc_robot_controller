@@ -190,6 +190,7 @@ private:
         }
         auto goal_msg = pure_pursuit::action::PathAndFeedback::Goal();
         goal_msg.path = path_;
+        goal_msg.feedback_indices = mech_action_path_.mech_action_indices;
         auto goal_handle_future = move_path_action_client_->async_send_goal(goal_msg, send_goal_options);
         move_path_goal_uuid_ = goal_handle_future.get()->get_goal_id();
         return move_path_goal_uuid_;
@@ -232,6 +233,7 @@ private:
         }
         auto move_path_goal_msg = pure_pursuit::action::PathAndFeedback::Goal();
         move_path_goal_msg.path = path_;
+        move_path_goal_msg.feedback_indices = mech_action_path_.mech_action_indices;
         auto move_path_goal_handle_future = move_path_action_client_->async_send_goal(move_path_goal_msg, move_path_send_goal_options);
         move_path_goal_uuid_ = move_path_goal_handle_future.get()->get_goal_id();
         return move_path_goal_uuid_;
@@ -241,22 +243,30 @@ private:
         rclcpp_action::Client<mecha_control::action::DaizaCmd>::SendGoalOptions daiza_cmd_send_goal_options,
         rclcpp_action::Client<mecha_control::action::HinaCmd>::SendGoalOptions hina_cmd_send_goal_options
     ){
+        std::cout << "executeMovePathWithMechAction_feedback_callback" << std::endl;
+        std::cout << "goal_handle->get_goal_id():";
+        for (auto i : goal_handle->get_goal_id()) {
+            std::cout << std::hex << i;
+        }
+        std::cout << std::endl;
+        std::cout << "move_path_goal_uuid_:";
+        for (auto i : move_path_goal_uuid_) {
+            std::cout << std::hex << i;
+        }
+        std::cout << std::endl;
         if(goal_handle->get_goal_id() == move_path_goal_uuid_){
             std::stringstream ss;
             path_current_index_ = feedback->current_index;
             ss << "Feedback: " << path_current_index_;
             status_ = ss.str();
-            while(mech_action_path_.mech_action_indices.size() > 0){
-                if(path_current_index_ >= mech_action_path_.mech_action_indices[0]){
-                    mech_action_ = mech_action_path_.mech_actions_path[0];
-                    executeMechAction(daiza_cmd_send_goal_options, hina_cmd_send_goal_options);
-                    mech_action_path_.mech_action_indices.erase(mech_action_path_.mech_action_indices.begin());
-                    mech_action_path_.mech_actions_path.erase(mech_action_path_.mech_actions_path.begin());
-                }
-                if(mech_action_path_.mech_action_indices.size() == 0){
-                    break;
-                }
-            }
+            // for(auto i : mech_action_path_.mech_action_indices){
+            //     if(path_current_index_ >= i){
+            //         mech_action_ = mech_action_path_.mech_actions_path[i];
+            //         executeMechAction_no_callback(daiza_cmd_send_goal_options, hina_cmd_send_goal_options);
+            //         mech_action_path_.mech_action_indices.erase(mech_action_path_.mech_action_indices.begin());
+            //         mech_action_path_.mech_actions_path.erase(mech_action_path_.mech_actions_path.begin());
+            //     }
+            // }
         }
     }
     void executeMovePathWithMechAction_result_callback(const rclcpp_action::ClientGoalHandle<pure_pursuit::action::PathAndFeedback>::WrappedResult & result,
@@ -269,21 +279,18 @@ private:
                 case rclcpp_action::ResultCode::SUCCEEDED:
                     ss << "Goal";
                     ss << " with " << result.result->final_index;
-                    while(mech_action_path_.mech_action_indices.size() > 0){
-                        if(path_current_index_ >= mech_action_path_.mech_action_indices[0]){
-                            mech_action_ = mech_action_path_.mech_actions_path[0];
-                            executeMechAction(daiza_cmd_send_goal_options, hina_cmd_send_goal_options);
-                            mech_action_path_.mech_action_indices.erase(mech_action_path_.mech_action_indices.begin());
-                            mech_action_path_.mech_actions_path.erase(mech_action_path_.mech_actions_path.begin());
-                        }
-                        if(mech_action_path_.mech_action_indices.size() == 0){
-                            break;
-                        }
-                        if(mech_action_path_.mech_action_indices[0] > result.result->final_index){
-                            ss << " but cannot execute " << mech_action_path_.mech_action_indices.size() <<" mech action";
-                            break;
-                        }
-                    }
+                    // for(auto i : mech_action_path_.mech_action_indices){
+                    //     if(path_current_index_ >= i){
+                    //         mech_action_ = mech_action_path_.mech_actions_path[i];
+                    //         executeMechAction_no_callback(daiza_cmd_send_goal_options, hina_cmd_send_goal_options);
+                    //         mech_action_path_.mech_action_indices.erase(mech_action_path_.mech_action_indices.begin());
+                    //         mech_action_path_.mech_actions_path.erase(mech_action_path_.mech_actions_path.begin());
+                    //     }
+                    //     if(i > result.result->final_index){
+                    //         ss << " but cannot execute " << mech_action_path_.mech_action_indices.size() <<" mech action";
+                    //         break;
+                    //     }
+                    // }
                     break;
                 case rclcpp_action::ResultCode::ABORTED:
                     ss << "Goal was aborted";
@@ -302,27 +309,32 @@ private:
     rclcpp_action::GoalUUID executeMechAction(rclcpp_action::Client<mecha_control::action::DaizaCmd>::SendGoalOptions daiza_cmd_send_goal_options,
         rclcpp_action::Client<mecha_control::action::HinaCmd>::SendGoalOptions hina_cmd_send_goal_options
     ) {
+        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "executeMechAction called");
         rclcpp_action::GoalUUID goal_uuid;
         if (!daiza_cmd_action_client_->wait_for_action_server(std::chrono::seconds(1)) || !hina_cmd_action_client_->wait_for_action_server(std::chrono::seconds(1))) {
             status_ = "Action server not available";
             return goal_uuid;
         }
         if(mech_action_.type == mecha_control::msg::MechAction::DAIZA){
+            RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "executeMechAction DAIZA");
             auto daiza_cmd_goal_msg = mecha_control::action::DaizaCmd::Goal();
             daiza_cmd_goal_msg.command = mech_action_.daiza.command;
             auto daiza_cmd_goal_handle_future = daiza_cmd_action_client_->async_send_goal(daiza_cmd_goal_msg, daiza_cmd_send_goal_options);
             this->daiza_cmd_goal_uuid_ = daiza_cmd_goal_handle_future.get()->get_goal_id();
             goal_uuid = daiza_cmd_goal_uuid_;
+            RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "executeMechAction DAIZA uuid : %d", daiza_cmd_goal_uuid_);
         } else if(mech_action_.type == mecha_control::msg::MechAction::HINA){
+            RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "executeMechAction HINA");
             auto hina_cmd_goal_msg = mecha_control::action::HinaCmd::Goal();
             hina_cmd_goal_msg.command = mech_action_.hina.command;
             auto hina_cmd_goal_handle_future = hina_cmd_action_client_->async_send_goal(hina_cmd_goal_msg, hina_cmd_send_goal_options);
             this->hina_cmd_goal_uuid_ = hina_cmd_goal_handle_future.get()->get_goal_id();
             goal_uuid = hina_cmd_goal_uuid_;
+            RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "executeMechAction HINA uuid : %d", hina_cmd_goal_uuid_);
         } else if(mech_action_.type == mecha_control::msg::MechAction::BONBORI){
+            RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "executeMechAction BONBORI");
             auto bonbori_srv_request = std_srvs::srv::SetBool::Request::SharedPtr();
             bonbori_srv_request->data = mech_action_.bonbori_enable;
-            auto bonbori_srv_future = bonbori_srv_client_->async_send_request(bonbori_srv_request, std::bind(&RobotAction::bonbori_result_callback, this, std::placeholders::_1));
         }
         if(action_type_ == ActionType::MECH_ACTION_NON_BLOCKING){
             finished_ = true;
@@ -330,6 +342,50 @@ private:
         status_ = "Executing mech action";
         return goal_uuid;
     }
+
+    rclcpp_action::GoalUUID executeMechAction_no_callback(rclcpp_action::Client<mecha_control::action::DaizaCmd>::SendGoalOptions daiza_cmd_send_goal_options,
+        rclcpp_action::Client<mecha_control::action::HinaCmd>::SendGoalOptions hina_cmd_send_goal_options
+    ) {
+        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "executeMechAction called");
+        rclcpp_action::GoalUUID goal_uuid;
+        if (!daiza_cmd_action_client_->wait_for_action_server(std::chrono::seconds(1)) || !hina_cmd_action_client_->wait_for_action_server(std::chrono::seconds(1))) {
+            status_ = "Action server not available";
+            return goal_uuid;
+        }
+        if(mech_action_.type == mecha_control::msg::MechAction::DAIZA){
+            RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "executeMechAction DAIZA");
+            auto daiza_cmd_goal_msg = mecha_control::action::DaizaCmd::Goal();
+            daiza_cmd_goal_msg.command = mech_action_.daiza.command;
+            rclcpp_action::Client<mecha_control::action::DaizaCmd>::SendGoalOptions daiza_cmd_send_goal_options_empty;
+            daiza_cmd_send_goal_options_empty.feedback_callback = std::bind([](rclcpp_action::ClientGoalHandle<mecha_control::action::DaizaCmd>::SharedPtr goal_handle, const std::shared_ptr<const mecha_control::action::DaizaCmd::Feedback> feedback){}, std::placeholders::_1, std::placeholders::_2);
+            daiza_cmd_send_goal_options_empty.result_callback = std::bind([](const rclcpp_action::ClientGoalHandle<mecha_control::action::DaizaCmd>::WrappedResult & result){}, std::placeholders::_1);
+            auto daiza_cmd_goal_handle_future = daiza_cmd_action_client_->async_send_goal(daiza_cmd_goal_msg, daiza_cmd_send_goal_options_empty);
+            this->daiza_cmd_goal_uuid_ = daiza_cmd_goal_handle_future.get()->get_goal_id();
+            goal_uuid = daiza_cmd_goal_uuid_;
+            RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "executeMechAction DAIZA uuid : %d", daiza_cmd_goal_uuid_);
+        } else if(mech_action_.type == mecha_control::msg::MechAction::HINA){
+            RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "executeMechAction HINA");
+            auto hina_cmd_goal_msg = mecha_control::action::HinaCmd::Goal();
+            hina_cmd_goal_msg.command = mech_action_.hina.command;
+            rclcpp_action::Client<mecha_control::action::HinaCmd>::SendGoalOptions hina_cmd_send_goal_options_empty;
+            hina_cmd_send_goal_options_empty.feedback_callback = std::bind([](rclcpp_action::ClientGoalHandle<mecha_control::action::HinaCmd>::SharedPtr goal_handle, const std::shared_ptr<const mecha_control::action::HinaCmd::Feedback> feedback){}, std::placeholders::_1, std::placeholders::_2);
+            hina_cmd_send_goal_options_empty.result_callback = std::bind([](const rclcpp_action::ClientGoalHandle<mecha_control::action::HinaCmd>::WrappedResult & result){}, std::placeholders::_1);
+            auto hina_cmd_goal_handle_future = hina_cmd_action_client_->async_send_goal(hina_cmd_goal_msg, hina_cmd_send_goal_options_empty);
+            this->hina_cmd_goal_uuid_ = hina_cmd_goal_handle_future.get()->get_goal_id();
+            goal_uuid = hina_cmd_goal_uuid_;
+            RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "executeMechAction HINA uuid : %d", hina_cmd_goal_uuid_);
+        } else if(mech_action_.type == mecha_control::msg::MechAction::BONBORI){
+            RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "executeMechAction BONBORI");
+            auto bonbori_srv_request = std_srvs::srv::SetBool::Request::SharedPtr();
+            bonbori_srv_request->data = mech_action_.bonbori_enable;
+        }
+        if(action_type_ == ActionType::MECH_ACTION_NON_BLOCKING){
+            finished_ = true;
+        }
+        status_ = "Executing mech action";
+        return goal_uuid;
+    }
+    
     void daiza_feedback_callback(rclcpp_action::ClientGoalHandle<mecha_control::action::DaizaCmd>::SharedPtr goal_handle,
         const std::shared_ptr<const mecha_control::action::DaizaCmd::Feedback> feedback
     ){
@@ -509,6 +565,7 @@ public:
             move_path_send_goal_options.result_callback = std::bind(&RobotActionsManager::move_path_result_callback, this, std::placeholders::_1);
             robot_action->execute(move_path_send_goal_options, daiza_cmd_send_goal_options, hina_cmd_send_goal_options);
             robot_actions_index_ = index;
+            RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "executeRobotAction: %d", robot_actions_index_);
             // robot_actions_[robot_actions_index_].move_path_goal_uuid_ = robot_action->move_path_goal_uuid_;
             // robot_actions_[robot_actions_index_].daiza_cmd_goal_uuid_ = robot_action->daiza_cmd_goal_uuid_;
             // robot_actions_[robot_actions_index_].hina_cmd_goal_uuid_ = robot_action->hina_cmd_goal_uuid_;
@@ -536,6 +593,7 @@ public:
     void process() {
         if(robot_actions_index_ < robot_actions_.size() && running_executeRobotActions_){
             if(robot_actions_[robot_actions_index_].isFinished()){
+                RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "process: %d", robot_actions_index_);
                 robot_actions_index_++;
                 if(robot_actions_index_ < robot_actions_.size() && robot_actions_index_ <= robot_actions_index_to_){
                     executeRobotAction(robot_actions_index_);
@@ -580,26 +638,31 @@ private:
     size_t robot_actions_index_to_;
 
     void daiza_feedback_callback(rclcpp_action::ClientGoalHandle<mecha_control::action::DaizaCmd>::SharedPtr goal_handle, const std::shared_ptr<const mecha_control::action::DaizaCmd::Feedback> feedback){
+        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Daiza feedback callback");
         for(auto &robot_action : robot_actions_){
             robot_action.get_daiza_feedback_callback() (goal_handle, feedback);
         }
     }
     void daiza_result_callback(const rclcpp_action::ClientGoalHandle<mecha_control::action::DaizaCmd>::WrappedResult & result){
+        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Daiza result callback");
         for(auto &robot_action : robot_actions_){
             robot_action.get_daiza_result_callback() (result);
         }
     }
     void hina_feedback_callback(rclcpp_action::ClientGoalHandle<mecha_control::action::HinaCmd>::SharedPtr goal_handle, const std::shared_ptr<const mecha_control::action::HinaCmd::Feedback> feedback){
+        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Hina feedback callback");
         for(auto &robot_action : robot_actions_){
             robot_action.get_hina_feedback_callback() (goal_handle, feedback);
         }
     }
     void hina_result_callback(const rclcpp_action::ClientGoalHandle<mecha_control::action::HinaCmd>::WrappedResult & result){
+        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Hina result callback");
         for(auto &robot_action : robot_actions_){
             robot_action.get_hina_result_callback() (result);
         }
     }
     void move_path_feedback_callback(rclcpp_action::ClientGoalHandle<pure_pursuit::action::PathAndFeedback>::SharedPtr goal_handle, const std::shared_ptr<const pure_pursuit::action::PathAndFeedback::Feedback> feedback){
+        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Move path feedback callback");
         auto daiza_cmd_send_goal_options = rclcpp_action::Client<mecha_control::action::DaizaCmd>::SendGoalOptions();
         auto hina_cmd_send_goal_options = rclcpp_action::Client<mecha_control::action::HinaCmd>::SendGoalOptions();
         daiza_cmd_send_goal_options.feedback_callback = std::bind(&RobotActionsManager::daiza_feedback_callback, this, std::placeholders::_1, std::placeholders::_2);
@@ -609,6 +672,7 @@ private:
         }
     }
     void move_path_result_callback(const rclcpp_action::ClientGoalHandle<pure_pursuit::action::PathAndFeedback>::WrappedResult & result){
+        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Move path result callback");
         auto daiza_cmd_send_goal_options = rclcpp_action::Client<mecha_control::action::DaizaCmd>::SendGoalOptions();
         auto hina_cmd_send_goal_options = rclcpp_action::Client<mecha_control::action::HinaCmd>::SendGoalOptions();
         daiza_cmd_send_goal_options.feedback_callback = std::bind(&RobotActionsManager::daiza_feedback_callback, this, std::placeholders::_1, std::placeholders::_2);
