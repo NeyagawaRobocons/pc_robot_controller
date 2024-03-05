@@ -16,10 +16,33 @@ public:
         actions.push_back(action);
         action_names.push_back(action_name);
     }
-    void append_action_to_manager(){
+    void append_action_to_manager_all(){
         for (auto action : actions)
         {
             indices.push_back(manager->addRobotAction(action));
+        }
+    }
+    void append_action_to_manager(size_t index){
+        indices.push_back(manager->addRobotAction(actions[index]));
+    }
+    void clear(){
+        actions.clear();
+        action_names.clear();
+        indices.clear();
+    }
+    void clear_manager(){
+        manager->clear();
+    }
+    void clear_all(){
+        clear();
+        clear_manager();
+    }
+    void change_action_to_manager(size_t index_from, size_t index_to){
+        manager->clear();
+        indices.clear();
+        for (size_t i = index_from; i <= index_to; i++)
+        {
+            indices.push_back(manager->addRobotAction(actions[i]));
         }
     }
     void move(Vector2 origin){

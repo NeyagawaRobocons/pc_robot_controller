@@ -7,7 +7,9 @@
 #include "pure_pursuit/action/path_and_feedback.hpp"
 #include "mecha_control/action/daiza_cmd.hpp"
 #include "mecha_control/action/hina_cmd.hpp"
+#include "std_msgs/msg/bool.hpp"
 #include "std_srvs/srv/set_bool.hpp"
+#include "cclp/include/lines_and_points.hpp"
 
 #include <chrono>
 #include <functional>
@@ -58,7 +60,8 @@ public:
     rclcpp_action::Client<pure_pursuit::action::PathAndFeedback>::SharedPtr move_path_action_client_;
     rclcpp_action::Client<mecha_control::action::DaizaCmd>::SharedPtr daiza_cmd_action_client_;
     rclcpp_action::Client<mecha_control::action::HinaCmd>::SharedPtr hina_cmd_action_client_;
-    rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr bonbori_srv_client_;
+    rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr bonbori_pub_;
+    // rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr bonbori_srv_client_;
 public:
     RobotAction(pure_pursuit::msg::Path2DWithParams path, rclcpp_action::Client<pure_pursuit::action::PathAndFeedback>::SharedPtr move_path_action_client) {
         action_type_ = ActionType::MOVE_PATH;
@@ -69,7 +72,8 @@ public:
         rclcpp_action::Client<pure_pursuit::action::PathAndFeedback>::SharedPtr move_path_action_client,
         rclcpp_action::Client<mecha_control::action::DaizaCmd>::SharedPtr daiza_cmd_action_client,
         rclcpp_action::Client<mecha_control::action::HinaCmd>::SharedPtr hina_cmd_action_client,
-        rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr bonbori_srv_client
+        rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr bonbori_pub
+        // rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr bonbori_srv_client
     ) {
         action_type_ = ActionType::MOVE_PATH_WITH_MECH_ACTION;
         path_ = path;
@@ -77,25 +81,29 @@ public:
         move_path_action_client_ = move_path_action_client;
         daiza_cmd_action_client_ = daiza_cmd_action_client;
         hina_cmd_action_client_ = hina_cmd_action_client;
-        bonbori_srv_client_ = bonbori_srv_client;
+        bonbori_pub_ = bonbori_pub;
+        // bonbori_srv_client_ = bonbori_srv_client;
     };
     RobotAction(mecha_control::msg::MechAction mech_action, 
         rclcpp_action::Client<mecha_control::action::DaizaCmd>::SharedPtr daiza_cmd_action_client,
         rclcpp_action::Client<mecha_control::action::HinaCmd>::SharedPtr hina_cmd_action_client,
-        rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr bonbori_srv_client,
+        rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr bonbori_pub,
+        // rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr bonbori_srv_client,
         bool non_blocking=false
     ) {
         action_type_ = non_blocking ? ActionType::MECH_ACTION_NON_BLOCKING : ActionType::MECH_ACTION;
         mech_action_ = mech_action;
         daiza_cmd_action_client_ = daiza_cmd_action_client;
         hina_cmd_action_client_ = hina_cmd_action_client;
-        bonbori_srv_client_ = bonbori_srv_client;
+        bonbori_pub_ = bonbori_pub;
+        // bonbori_srv_client_ = bonbori_srv_client;
     };
     RobotAction(ActionType action_type, pure_pursuit::msg::Path2DWithParams path, MechActionPath mech_action_path, mecha_control::msg::MechAction mech_action,
         rclcpp_action::Client<pure_pursuit::action::PathAndFeedback>::SharedPtr move_path_action_client,
         rclcpp_action::Client<mecha_control::action::DaizaCmd>::SharedPtr daiza_cmd_action_client,
         rclcpp_action::Client<mecha_control::action::HinaCmd>::SharedPtr hina_cmd_action_client,
-        rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr bonbori_srv_client
+        rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr bonbori_pub
+        // rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr bonbori_srv_client
     ) {
         action_type_ = action_type;
         path_ = path;
@@ -104,7 +112,8 @@ public:
         move_path_action_client_ = move_path_action_client;
         daiza_cmd_action_client_ = daiza_cmd_action_client;
         hina_cmd_action_client_ = hina_cmd_action_client;
-        bonbori_srv_client_ = bonbori_srv_client;
+        bonbori_pub_ = bonbori_pub;
+        // bonbori_srv_client_ = bonbori_srv_client;
     };
     ActionType getActionType() {
         return action_type_;
@@ -125,6 +134,18 @@ public:
             case ActionType::MECH_ACTION_NON_BLOCKING:
                 executeMechAction(daiza_cmd_send_goal_options, hina_cmd_send_goal_options);
                 break;
+        }
+    };
+    void abort() {
+        if(action_type_ == ActionType::MOVE_PATH){
+            move_path_action_client_->async_cancel_all_goals();
+        } else if(action_type_ == ActionType::MOVE_PATH_WITH_MECH_ACTION){
+            move_path_action_client_->async_cancel_all_goals();
+            daiza_cmd_action_client_->async_cancel_all_goals();
+            hina_cmd_action_client_->async_cancel_all_goals();
+        } else if(action_type_ == ActionType::MECH_ACTION){
+            daiza_cmd_action_client_->async_cancel_all_goals();
+            hina_cmd_action_client_->async_cancel_all_goals();
         }
     };
     std::string getStatus() {
@@ -333,8 +354,15 @@ private:
             RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "executeMechAction HINA uuid : %d", hina_cmd_goal_uuid_);
         } else if(mech_action_.type == mecha_control::msg::MechAction::BONBORI){
             RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "executeMechAction BONBORI");
-            auto bonbori_srv_request = std_srvs::srv::SetBool::Request::SharedPtr();
-            bonbori_srv_request->data = mech_action_.bonbori_enable;
+            // auto bonbori_srv_request = std_srvs::srv::SetBool::Request::SharedPtr();
+            // bonbori_srv_request->data = mech_action_.bonbori_enable;
+            // RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "executeMechAction send BONBORI request");
+            // auto bonbori_srv_future = bonbori_srv_client_->async_send_request(bonbori_srv_request, std::bind(&RobotAction::bonbori_result_callback, this, std::placeholders::_1));
+            // RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "executeMechAction BONBORI sended");
+            auto bonbori_pub_msg = std_msgs::msg::Bool();
+            bonbori_pub_msg.data = mech_action_.bonbori_enable;
+            bonbori_pub_->publish(bonbori_pub_msg);
+            finished_ = true;
         }
         if(action_type_ == ActionType::MECH_ACTION_NON_BLOCKING){
             finished_ = true;
@@ -346,7 +374,7 @@ private:
     rclcpp_action::GoalUUID executeMechAction_no_callback(rclcpp_action::Client<mecha_control::action::DaizaCmd>::SendGoalOptions daiza_cmd_send_goal_options,
         rclcpp_action::Client<mecha_control::action::HinaCmd>::SendGoalOptions hina_cmd_send_goal_options
     ) {
-        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "executeMechAction called");
+        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "executeMechAction_no_callback called");
         rclcpp_action::GoalUUID goal_uuid;
         if (!daiza_cmd_action_client_->wait_for_action_server(std::chrono::seconds(1)) || !hina_cmd_action_client_->wait_for_action_server(std::chrono::seconds(1))) {
             status_ = "Action server not available";
@@ -376,8 +404,12 @@ private:
             RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "executeMechAction HINA uuid : %d", hina_cmd_goal_uuid_);
         } else if(mech_action_.type == mecha_control::msg::MechAction::BONBORI){
             RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "executeMechAction BONBORI");
-            auto bonbori_srv_request = std_srvs::srv::SetBool::Request::SharedPtr();
-            bonbori_srv_request->data = mech_action_.bonbori_enable;
+            auto bonbori_pub_msg = std_msgs::msg::Bool();
+            bonbori_pub_msg.data = mech_action_.bonbori_enable;
+            bonbori_pub_->publish(bonbori_pub_msg);
+            finished_ = true;
+            // auto bonbori_srv_request = std_srvs::srv::SetBool::Request::SharedPtr();
+            // bonbori_srv_request->data = mech_action_.bonbori_enable;
         }
         if(action_type_ == ActionType::MECH_ACTION_NON_BLOCKING){
             finished_ = true;
@@ -522,19 +554,20 @@ private:
             finished_ = true;
         }
     }
-    void bonbori_result_callback(rclcpp::Client<std_srvs::srv::SetBool>::SharedFuture future){
-        std::stringstream ss;
-        switch (future.get()->success) {
-            case true:
-                ss << "Bonbori :" << mech_action_.bonbori_enable;
-                break;
-            case false:
-                ss << "Bonbori faled";
-                break;
-        }
-        status_ = ss.str();
-        finished_ = true;
-    }
+    // void bonbori_result_callback(rclcpp::Client<std_srvs::srv::SetBool>::SharedFuture future){
+    //     RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "bonbori_result_callback");
+    //     std::stringstream ss;
+    //     switch (future.get()->success) {
+    //         case true:
+    //             ss << "Bonbori :" << mech_action_.bonbori_enable;
+    //             break;
+    //         case false:
+    //             ss << "Bonbori faled";
+    //             break;
+    //     }
+    //     status_ = ss.str();
+    //     finished_ = true;
+    // }
 
 };
 
@@ -544,8 +577,9 @@ public:
     RobotActionsManager(rclcpp_action::Client<pure_pursuit::action::PathAndFeedback>::SharedPtr move_path_action_client,
         rclcpp_action::Client<mecha_control::action::DaizaCmd>::SharedPtr daiza_cmd_action_client,
         rclcpp_action::Client<mecha_control::action::HinaCmd>::SharedPtr hina_cmd_action_client,
-        rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr bonbori_srv_client
-    ) : move_path_action_client_(move_path_action_client), daiza_cmd_action_client_(daiza_cmd_action_client), hina_cmd_action_client_(hina_cmd_action_client), bonbori_srv_client_(bonbori_srv_client) {
+        rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr bonbori_pub
+        // rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr bonbori_srv_client
+    ) : move_path_action_client_(move_path_action_client), daiza_cmd_action_client_(daiza_cmd_action_client), hina_cmd_action_client_(hina_cmd_action_client), bonbori_pub_(bonbori_pub) {
     };
     size_t addRobotAction(RobotAction robot_action) {
         robot_actions_.push_back(robot_action);
@@ -604,6 +638,20 @@ public:
             }
         }
     };
+    void abort() {
+        if(robot_actions_index_ < robot_actions_.size()){
+            robot_actions_[robot_actions_index_].abort();
+        }
+    };
+    void clear() {
+        for(auto &robot_action : robot_actions_){
+            robot_action.abort();
+        }
+        robot_actions_.clear();
+        running_executeRobotActions_ = false;
+        robot_actions_index_ = 0;
+        robot_actions_index_to_ = 0;
+    }
     std::string getStatus() {
         if(robot_actions_index_ < robot_actions_.size()){
             // std::cout << running_robot_action_->getStatus() << std::endl;
@@ -626,11 +674,26 @@ public:
     size_t getRobotActionNum() {
         return robot_actions_.size();
     };
+    std::vector<Line> getCurrentPath() {
+        if(robot_actions_index_ < robot_actions_.size())if(robot_actions_[robot_actions_index_].path_.path.size() >= 2){
+            std::vector<Line> lines;
+            for (size_t i = 0; i < robot_actions_[robot_actions_index_].path_.path.size() - 1; i++) {
+                Line l;
+                l.from = {(float)robot_actions_[robot_actions_index_].path_.path[i].x, (float)robot_actions_[robot_actions_index_].path_.path[i].y};
+                l.to = {(float)robot_actions_[robot_actions_index_].path_.path[i + 1].x, (float)robot_actions_[robot_actions_index_].path_.path[i + 1].y};
+                lines.push_back(l);
+            }
+            return lines;
+        }
+        return std::vector<Line>();
+    };
+    
 private:
     rclcpp_action::Client<pure_pursuit::action::PathAndFeedback>::SharedPtr move_path_action_client_;
     rclcpp_action::Client<mecha_control::action::DaizaCmd>::SharedPtr daiza_cmd_action_client_;
     rclcpp_action::Client<mecha_control::action::HinaCmd>::SharedPtr hina_cmd_action_client_;
-    rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr bonbori_srv_client_;
+    rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr bonbori_pub_;
+    // rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr bonbori_srv_client_;
     std::vector<RobotAction> robot_actions_;
     // RobotAction *running_robot_action_;
     size_t robot_actions_index_;
@@ -689,9 +752,10 @@ public:
     PathCallers(rclcpp::Client<pure_pursuit::srv::GetPath>::SharedPtr get_path_client) : get_path_client_(get_path_client) {
     };
     void RequestPath(uint8_t path_name) {
-        if (!get_path_client_->service_is_ready()) {
+        if (!get_path_client_->wait_for_service(std::chrono::seconds(1))) {
             return;
         }
+        // RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Requesting path : %d", path_name);
         request_num_++;
         auto request = std::make_shared<pure_pursuit::srv::GetPath::Request>();
         request->path_number = path_name;
@@ -700,6 +764,7 @@ public:
     void RequestPaths(std::vector<uint8_t> path_names) {
         for(auto path_name : path_names){
             RequestPath(path_name);
+            rclcpp::sleep_for(std::chrono::milliseconds(100));
         }
     };
     bool isFinished() {

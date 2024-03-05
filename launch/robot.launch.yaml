@@ -1,0 +1,21 @@
+launch:
+- include:
+    file: $(find-pkg-share cclp)/launch/cclp.launch.yaml
+- node:
+    pkg: nucleo_agent
+    exec: nucleo_agent_node
+- node:
+    pkg: mecha_control
+    exec: cmd_seq
+- node:
+    pkg: calc_wheel_vel
+    exec: calc_wheel_vel
+- node:
+    pkg: pure_pursuit
+    exec: path_server_node.py
+- node:
+    pkg: pure_pursuit
+    exec: pure_pursuit_node.py
+- node:
+    pkg: pc_robot_controller
+    exec: auto_controller
