@@ -468,13 +468,25 @@ private:
                 map_request_pub_->publish(req);
             }
             
-            
+            if(ready_seq.is_pressed()){
+                ra_list.change_action_to_manager(ready_seq_index_from, ready_seq_index_to);
+                ra_list.set_name(std::string("READY"));
+            }
+            if(right_seq.is_pressed()){
+                ra_list.change_action_to_manager(right_seq_index_from, right_seq_index_to);
+                ra_list.set_name(std::string("RIGHT"));
+            }
+            if(left_seq.is_pressed()){
+                ra_list.change_action_to_manager(left_seq_index_from, left_seq_index_to);
+                ra_list.set_name(std::string("LEFT"));
+            }
 
 
             Vector3 tf_vec3;
             std::string err_tf;
+            geometry_msgs::msg::TransformStamped transform;
             try{
-                geometry_msgs::msg::TransformStamped transform = tf_buffer_->lookupTransform(map_frame_, base_frame_, tf2::TimePointZero);
+                transform = tf_buffer_->lookupTransform(map_frame_, base_frame_, tf2::TimePointZero);
                 Quaternion q = {transform.transform.rotation.x, transform.transform.rotation.y, transform.transform.rotation.z, transform.transform.rotation.w};
                 tf_vec3 = {transform.transform.translation.x, transform.transform.translation.y, QuaternionToEuler(q).z};
             }catch(tf2::TransformException &ex){
@@ -501,6 +513,17 @@ private:
                 moved_points2 = points2;
             }
             move_points(moved_points2, tf2d_from_vec3(tf_vec3));
+
+            if(ip_reset.is_pressed()){
+                auto pose = geometry_msgs::msg::Pose();
+                pose.position.x = transform.transform.translation.x;
+                pose.position.y = transform.transform.translation.y;
+                pose.position.z = transform.transform.translation.z;
+                pose.orientation = transform.transform.rotation;
+                mouse_point_pub_->publish(pose);
+            }
+
+            robot_actions_manager_.process();
 
             // sl.process(mouse);
             // tb.process(mouse);
@@ -532,10 +555,18 @@ private:
                 pa.draw();
                 pa_enable.draw();
                 pa_enable_label.draw();
+                ip_reset.draw();
+                ip_reset_label.draw();
                 req_left_map.draw();
                 req_left_map_label.draw();
                 req_right_map.draw();
                 req_right_map_label.draw();
+                ready_seq.draw();
+                ready_seq_label.draw();
+                right_seq.draw();
+                right_seq_label.draw();
+                left_seq.draw();
+                left_seq_label.draw();
                 ra_list.draw();
 
                 std::stringstream ss;

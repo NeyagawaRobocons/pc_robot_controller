@@ -341,7 +341,9 @@ private:
             auto daiza_cmd_goal_msg = mecha_control::action::DaizaCmd::Goal();
             daiza_cmd_goal_msg.command = mech_action_.daiza.command;
             auto daiza_cmd_goal_handle_future = daiza_cmd_action_client_->async_send_goal(daiza_cmd_goal_msg, daiza_cmd_send_goal_options);
+            RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "executeMechAction DAIZA sended");
             this->daiza_cmd_goal_uuid_ = daiza_cmd_goal_handle_future.get()->get_goal_id();
+            RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "executeMechAction get goal id");
             goal_uuid = daiza_cmd_goal_uuid_;
             RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "executeMechAction DAIZA uuid : %d", daiza_cmd_goal_uuid_);
         } else if(mech_action_.type == mecha_control::msg::MechAction::HINA){
@@ -586,6 +588,7 @@ public:
         return robot_actions_.size() - 1;
     };
     void executeRobotAction(size_t index) {
+        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "executeRobotAction: %d", index);
         if(index < robot_actions_.size()){
             auto robot_action = &robot_actions_[index];
             auto move_path_send_goal_options = rclcpp_action::Client<pure_pursuit::action::PathAndFeedback>::SendGoalOptions();

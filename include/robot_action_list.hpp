@@ -8,7 +8,7 @@
 class RobotActionList
 {
 public:
-    RobotActionList(Vector2 origin, std::string name, RobotActionsManager *manager): start_button({origin.x + 200, origin.y}, 100, 70, LIME, GREEN, false, 0.5), start_button_label("Start", {origin.x + 210, origin.y +25}, 20, GRAY){
+    RobotActionList(Vector2 origin, std::string name, RobotActionsManager *manager): start_button({origin.x + 150, origin.y}, 150, 70, GREEN, LIME, false, 0.5), start_button_label("Start", {origin.x + 160, origin.y +25}, 20, DARKGRAY){
         this->origin = origin;
         this->name = name;
         this->manager = manager;
@@ -53,12 +53,14 @@ public:
     }
     void move(Vector2 origin){
         this->origin = origin;
-        start_button.move({origin.x + 200, origin.y});
+        start_button.move({origin.x + 150, origin.y});
+        start_button_label.move({origin.x + 160, origin.y + 25});
     }
     void process(Vector2 mouse){
         start_button.process(mouse);
         if(start_button.is_pressed() && manager->isFinished()){
-            manager->executeRobotActions(indices[0], indices[indices.size() - 1]);
+            std::cout << "Start button pressed" << std::endl;
+            manager->executeRobotActions(0, index_to_ - index_from_ + 1);
         }
     }
     void set_name(std::string name){
@@ -70,14 +72,16 @@ public:
         std::string status = manager->getStatus();
         ss << "Status: " << status;
         DrawText(ss.str().c_str(), origin.x, origin.y + 80, 20, BLACK);
-        DrawText("Actions:", origin.x, origin.y + 105, 20, BLACK);
+        ss.clear();
+        ss << "Actions: " << index_from_ << " - " << index_to_;
+        DrawText(ss.str().c_str(), origin.x, origin.y + 105, 20, BLACK);
         for (size_t i = index_from_; i <= index_to_; i++)
         {
-            DrawText(action_names[i].c_str(), origin.x, origin.y + 135 + 25 * (i - index_from_), 20, manager->isFinishedAction(i - index_from_) ? BLACK : GRAY);
+            DrawText(action_names[i].c_str(), origin.x, origin.y + 135 + 25 * (i - index_from_), 20, manager->isFinishedAction(i - index_from_) ? DARKGRAY : PINK);
         }
         start_button.draw();
         start_button_label.draw();
-        DrawRectangleRoundedLines({origin.x - 5, origin.y - 5, 300.0 + 5.0, 135.0 + (index_to_ - index_from_) *25 + 5}, 0.1, 50, 4.0, GRAY);
+        DrawRectangleRoundedLines({origin.x - 5, origin.y - 5, 300.0 + 10, 135 + 25 + (index_to_ - index_from_) *25 + 5}, 0.1, 50, 4.0, GRAY);
     }
     size_t size(){
         return actions.size();
