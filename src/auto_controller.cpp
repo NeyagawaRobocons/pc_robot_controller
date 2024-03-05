@@ -154,15 +154,20 @@ private:
         PoseAdjust pa(map_draw_origin, map_draw_scale);
         toggle_button pa_enable({screenWidth / 2 + 400, screenHeight - 200}, 250, 70, GRAY, BLUE, false, 0.5);
         label pa_enable_label("initial pose", {screenWidth / 2 + 400 + 10, screenHeight - 200 + 25}, 20, BLACK);
+        push_button ip_reset({screenWidth / 2 + 400, screenHeight - 300}, 250, 70, GRAY, BLUE, false, 0.5);
+        label ip_reset_label("IP reset", {screenWidth / 2 + 400 + 10, screenHeight - 300 + 25}, 20, BLACK);
 
         push_button req_left_map({screenWidth / 2 + 400, screenHeight - 500}, 250, 70, GRAY, BLUE, false, 0.5);
         label req_left_map_label("request left map", {screenWidth / 2 + 400 + 10, screenHeight - 500 + 25}, 20, BLACK);
         push_button req_right_map({screenWidth / 2 + 400, screenHeight - 400}, 250, 70, GRAY, BLUE, false, 0.5);
         label req_right_map_label("request right map", {screenWidth / 2 + 400 + 10, screenHeight - 400 + 25}, 20, BLACK);
 
-        push_button daiza({screenWidth / 2 + 400, 600}, 250, 70, GRAY, BLUE, false, 0.5);
-        label daiza_label("collect daiza", {screenWidth / 2 + 400 + 10, screenHeight - 800 + 25}, 20, BLACK);
-        label daiza_status("", {screenWidth / 2 + 400 + 10, screenHeight - 700 + 25}, 20, BLACK);
+        push_button ready_seq({screenWidth / 2 + 400, 100}, 250, 70, GRAY, BLUE, false, 0.5);
+        label ready_seq_label("READY", {screenWidth / 2 + 400 + 10, 100 + 25}, 20, BLACK);
+        push_button right_seq({screenWidth / 2 + 400, 200}, 250, 70, SKYBLUE, BLUE, false, 0.5);
+        label right_seq_label("RIGHT", {screenWidth / 2 + 400 + 10, 200 + 25}, 20, BLACK);
+        push_button left_seq({screenWidth / 2 + 400, 300}, 250, 70, PINK, RED, false, 0.5);
+        label left_seq_label("LEFT", {screenWidth / 2 + 400 + 10, 300 + 25}, 20, BLACK);
 
         PathCallers path_callers(get_path_client_);
         std::vector<uint8_t> path_names;
@@ -198,93 +203,205 @@ private:
         
 
         RobotActionList ra_list({100, screenHeight - 600}, std::string("test"), &robot_actions_manager_);
+        // add ready sequence
+        size_t ready_seq_index_from = ra_list.size();
+        {
+            auto bonbori_off = mecha_control::msg::MechAction();
+            bonbori_off.type = mecha_control::msg::MechAction::BONBORI;
+            bonbori_off.bonbori_enable = false;
+            ra_list.add_action(RobotAction(bonbori_off, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("bonbori off"));
 
+            auto daiza_ready = mecha_control::msg::MechAction();
+            daiza_ready.type = mecha_control::msg::MechAction::DAIZA;
+            daiza_ready.daiza.command = mecha_control::msg::DaizaCmdType::READY;
+            ra_list.add_action(RobotAction(daiza_ready, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza ready"));
 
-        auto bonbori_on2 = mecha_control::msg::MechAction();
-        bonbori_on2.type = mecha_control::msg::MechAction::BONBORI;
-        bonbori_on2.bonbori_enable = false;
-        ra_list.add_action(RobotAction(bonbori_on2, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("bonbori on"));
+            auto hina_ready = mecha_control::msg::MechAction();
+            hina_ready.type = mecha_control::msg::MechAction::HINA;
+            hina_ready.hina.command = mecha_control::msg::HinaCmdType::READY;
+            ra_list.add_action(RobotAction(hina_ready, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina ready"));
+        }
+        size_t ready_seq_index_to = ra_list.size() - 1;
+        // add right sequence
+        size_t right_seq_index_from = ra_list.size();
+        {
+            auto bonbori_off = mecha_control::msg::MechAction();
+            bonbori_off.type = mecha_control::msg::MechAction::BONBORI;
+            bonbori_off.bonbori_enable = false;
+            ra_list.add_action(RobotAction(bonbori_off, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("bonbori off"));
 
-        ra_list.add_action(RobotAction(
-            path_callers.getPath(pure_pursuit::srv::GetPath::Request::LEFT_START),
-            path_and_feedback_client_
-        ), std::string("start"));
+            ra_list.add_action(RobotAction(
+                path_callers.getPath(pure_pursuit::srv::GetPath::Request::RIGHT_START),
+                path_and_feedback_client_
+            ), std::string("start"));
 
-        auto daiza_unclamp = mecha_control::msg::MechAction();
-        daiza_unclamp.type = mecha_control::msg::MechAction::DAIZA;
-        daiza_unclamp.daiza.command = mecha_control::msg::DaizaCmdType::EXPAND_AND_UNCLAMP;
-        ra_list.add_action(RobotAction(daiza_unclamp, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza unclamp"));
+            auto daiza_unclamp = mecha_control::msg::MechAction();
+            daiza_unclamp.type = mecha_control::msg::MechAction::DAIZA;
+            daiza_unclamp.daiza.command = mecha_control::msg::DaizaCmdType::EXPAND_AND_UNCLAMP;
+            ra_list.add_action(RobotAction(daiza_unclamp, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza unclamp"));
 
-        ra_list.add_action(RobotAction(
-            path_callers.getPath(pure_pursuit::srv::GetPath::Request::LEFT_DAIZA_COLLECT),
-            path_and_feedback_client_
-        ), std::string("collect daiza"));
+            ra_list.add_action(RobotAction(
+                path_callers.getPath(pure_pursuit::srv::GetPath::Request::RIGHT_DAIZA_COLLECT),
+                path_and_feedback_client_
+            ), std::string("move to daiza"));
 
-        auto daiza_take = mecha_control::msg::MechAction();
-        daiza_take.type = mecha_control::msg::MechAction::DAIZA;
-        daiza_take.daiza.command = mecha_control::msg::DaizaCmdType::CLAMP_AND_CONTRACT;
-        ra_list.add_action(RobotAction(daiza_take, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza clamp"));
+            auto daiza_take = mecha_control::msg::MechAction();
+            daiza_take.type = mecha_control::msg::MechAction::DAIZA;
+            daiza_take.daiza.command = mecha_control::msg::DaizaCmdType::CLAMP_AND_CONTRACT;
+            ra_list.add_action(RobotAction(daiza_take, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza clamp"));
 
-        ra_list.add_action(RobotAction(
-            path_callers.getPath(pure_pursuit::srv::GetPath::Request::LEFT_DAIZA_PLACE),
-            path_and_feedback_client_
-        ), std::string("place daiza"));
+            ra_list.add_action(RobotAction(
+                path_callers.getPath(pure_pursuit::srv::GetPath::Request::RIGHT_DAIZA_PLACE),
+                path_and_feedback_client_
+            ), std::string("place daiza"));
 
-        auto daiza_place = mecha_control::msg::MechAction();
-        daiza_place.type = mecha_control::msg::MechAction::DAIZA;
-        daiza_place.daiza.command = mecha_control::msg::DaizaCmdType::EXPAND_AND_PLACE_AND_CONTRACT;
-        ra_list.add_action(RobotAction(daiza_place, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza ready"));
+            auto daiza_place = mecha_control::msg::MechAction();
+            daiza_place.type = mecha_control::msg::MechAction::DAIZA;
+            daiza_place.daiza.command = mecha_control::msg::DaizaCmdType::EXPAND_AND_PLACE_AND_CONTRACT;
+            ra_list.add_action(RobotAction(daiza_place, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza ready"));
 
-        auto daiza_contract = mecha_control::msg::MechAction();
-        daiza_contract.type = mecha_control::msg::MechAction::DAIZA;
-        daiza_contract.daiza.command = mecha_control::msg::DaizaCmdType::READY;
-        ra_list.add_action(RobotAction(daiza_contract, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza clamp"));
+            auto daiza_contract = mecha_control::msg::MechAction();
+            daiza_contract.type = mecha_control::msg::MechAction::DAIZA;
+            daiza_contract.daiza.command = mecha_control::msg::DaizaCmdType::READY;
+            ra_list.add_action(RobotAction(daiza_contract, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza clamp"));
 
-        ra_list.add_action(RobotAction(
-            path_callers.getPath(pure_pursuit::srv::GetPath::Request::LEFT_HINA_ZONE),
-            path_and_feedback_client_
-        ), std::string("hina zone"));
+            ra_list.add_action(RobotAction(
+                path_callers.getPath(pure_pursuit::srv::GetPath::Request::RIGHT_HINA_ZONE),
+                path_and_feedback_client_
+            ), std::string("hina zone"));
 
-        auto hina_expand = mecha_control::msg::MechAction();
-        hina_expand.type = mecha_control::msg::MechAction::HINA;
-        hina_expand.hina.command = mecha_control::msg::HinaCmdType::DOWN_AND_TAKE;
-        ra_list.add_action(RobotAction(hina_expand, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina expand"));
+            auto hina_expand = mecha_control::msg::MechAction();
+            hina_expand.type = mecha_control::msg::MechAction::HINA;
+            hina_expand.hina.command = mecha_control::msg::HinaCmdType::DOWN_AND_TAKE;
+            ra_list.add_action(RobotAction(hina_expand, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina expand"));
 
-        ra_list.add_action(RobotAction(
-            path_callers.getPath(pure_pursuit::srv::GetPath::Request::LEFT_HINA_COLLECT),
-            path_and_feedback_client_
-        ), std::string("collect hina"));
+            ra_list.add_action(RobotAction(
+                path_callers.getPath(pure_pursuit::srv::GetPath::Request::RIGHT_HINA_COLLECT),
+                path_and_feedback_client_
+            ), std::string("move to hina"));
 
-        auto hina_take = mecha_control::msg::MechAction();
-        hina_take.type = mecha_control::msg::MechAction::HINA;
-        hina_take.hina.command = mecha_control::msg::HinaCmdType::UP_AND_CARRY;
-        ra_list.add_action(RobotAction(hina_take, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina up"));
+            auto hina_take = mecha_control::msg::MechAction();
+            hina_take.type = mecha_control::msg::MechAction::HINA;
+            hina_take.hina.command = mecha_control::msg::HinaCmdType::UP_AND_CARRY;
+            ra_list.add_action(RobotAction(hina_take, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina up"));
 
-        ra_list.add_action(RobotAction(
-            path_callers.getPath(pure_pursuit::srv::GetPath::Request::LEFT_HINA_PLACE),
-            path_and_feedback_client_
-        ), std::string("place hina"));
+            ra_list.add_action(RobotAction(
+                path_callers.getPath(pure_pursuit::srv::GetPath::Request::RIGHT_HINA_PLACE),
+                path_and_feedback_client_
+            ), std::string("place hina"));
 
-        auto hina_place_pos = mecha_control::msg::MechAction();
-        hina_place_pos.type = mecha_control::msg::MechAction::HINA;
-        hina_place_pos.hina.command = mecha_control::msg::HinaCmdType::UP_AND_PLACE;
-        ra_list.add_action(RobotAction(hina_place_pos, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina place pos"));
+            auto hina_place_pos = mecha_control::msg::MechAction();
+            hina_place_pos.type = mecha_control::msg::MechAction::HINA;
+            hina_place_pos.hina.command = mecha_control::msg::HinaCmdType::UP_AND_PLACE;
+            ra_list.add_action(RobotAction(hina_place_pos, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina place pos"));
 
-        auto hina_launch = mecha_control::msg::MechAction();
-        hina_launch.type = mecha_control::msg::MechAction::HINA;
-        hina_launch.hina.command = mecha_control::msg::HinaCmdType::LATCH_UNLOCK;
-        ra_list.add_action(RobotAction(hina_launch, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina launch"));
+            auto hina_launch = mecha_control::msg::MechAction();
+            hina_launch.type = mecha_control::msg::MechAction::HINA;
+            hina_launch.hina.command = mecha_control::msg::HinaCmdType::LATCH_UNLOCK;
+            ra_list.add_action(RobotAction(hina_launch, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina launch"));
 
-        auto bonbori_on = mecha_control::msg::MechAction();
-        bonbori_on.type = mecha_control::msg::MechAction::BONBORI;
-        bonbori_on.bonbori_enable = true;
-        ra_list.add_action(RobotAction(bonbori_on, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("bonbori on"));
+            auto bonbori_on = mecha_control::msg::MechAction();
+            bonbori_on.type = mecha_control::msg::MechAction::BONBORI;
+            bonbori_on.bonbori_enable = true;
+            ra_list.add_action(RobotAction(bonbori_on, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("bonbori on"));
 
-        // auto hina_ready = mecha_control::msg::MechAction();
-        // hina_ready.type = mecha_control::msg::MechAction::HINA;
-        // hina_ready.hina.command = mecha_control::msg::HinaCmdType::READY;
-        // ra_list.add_action(RobotAction(hina_ready, daiza_cmd_client_, hina_cmd_client_, bonbori_srv_client_), std::string("hina up"));
-        ra_list.append_action_to_manager_all();
+            // auto hina_ready = mecha_control::msg::MechAction();
+            // hina_ready.type = mecha_control::msg::MechAction::HINA;
+            // hina_ready.hina.command = mecha_control::msg::HinaCmdType::READY;
+            // ra_list.add_action(RobotAction(hina_ready, daiza_cmd_client_, hina_cmd_client_, bonbori_srv_client_), std::string("hina up"));
+        }
+        size_t right_seq_index_to = ra_list.size() - 1;
+        // add left sequence
+        size_t left_seq_index_from = ra_list.size();
+        {
+            auto bonbori_off = mecha_control::msg::MechAction();
+            bonbori_off.type = mecha_control::msg::MechAction::BONBORI;
+            bonbori_off.bonbori_enable = false;
+            ra_list.add_action(RobotAction(bonbori_off, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("bonbori off"));
+
+            ra_list.add_action(RobotAction(
+                path_callers.getPath(pure_pursuit::srv::GetPath::Request::LEFT_START),
+                path_and_feedback_client_
+            ), std::string("start"));
+
+            auto daiza_unclamp = mecha_control::msg::MechAction();
+            daiza_unclamp.type = mecha_control::msg::MechAction::DAIZA;
+            daiza_unclamp.daiza.command = mecha_control::msg::DaizaCmdType::EXPAND_AND_UNCLAMP;
+            ra_list.add_action(RobotAction(daiza_unclamp, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza unclamp"));
+
+            ra_list.add_action(RobotAction(
+                path_callers.getPath(pure_pursuit::srv::GetPath::Request::LEFT_DAIZA_COLLECT),
+                path_and_feedback_client_
+            ), std::string("move to daiza"));
+
+            auto daiza_take = mecha_control::msg::MechAction();
+            daiza_take.type = mecha_control::msg::MechAction::DAIZA;
+            daiza_take.daiza.command = mecha_control::msg::DaizaCmdType::CLAMP_AND_CONTRACT;
+            ra_list.add_action(RobotAction(daiza_take, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza clamp"));
+
+            ra_list.add_action(RobotAction(
+                path_callers.getPath(pure_pursuit::srv::GetPath::Request::LEFT_DAIZA_PLACE),
+                path_and_feedback_client_
+            ), std::string("place daiza"));
+
+            auto daiza_place = mecha_control::msg::MechAction();
+            daiza_place.type = mecha_control::msg::MechAction::DAIZA;
+            daiza_place.daiza.command = mecha_control::msg::DaizaCmdType::EXPAND_AND_PLACE_AND_CONTRACT;
+            ra_list.add_action(RobotAction(daiza_place, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza ready"));
+
+            auto daiza_contract = mecha_control::msg::MechAction();
+            daiza_contract.type = mecha_control::msg::MechAction::DAIZA;
+            daiza_contract.daiza.command = mecha_control::msg::DaizaCmdType::READY;
+            ra_list.add_action(RobotAction(daiza_contract, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza clamp"));
+
+            ra_list.add_action(RobotAction(
+                path_callers.getPath(pure_pursuit::srv::GetPath::Request::LEFT_HINA_ZONE),
+                path_and_feedback_client_
+            ), std::string("hina zone"));
+
+            auto hina_expand = mecha_control::msg::MechAction();
+            hina_expand.type = mecha_control::msg::MechAction::HINA;
+            hina_expand.hina.command = mecha_control::msg::HinaCmdType::DOWN_AND_TAKE;
+            ra_list.add_action(RobotAction(hina_expand, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina expand"));
+
+            ra_list.add_action(RobotAction(
+                path_callers.getPath(pure_pursuit::srv::GetPath::Request::LEFT_HINA_COLLECT),
+                path_and_feedback_client_
+            ), std::string("move to hina"));
+
+            auto hina_take = mecha_control::msg::MechAction();
+            hina_take.type = mecha_control::msg::MechAction::HINA;
+            hina_take.hina.command = mecha_control::msg::HinaCmdType::UP_AND_CARRY;
+            ra_list.add_action(RobotAction(hina_take, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina up"));
+
+            ra_list.add_action(RobotAction(
+                path_callers.getPath(pure_pursuit::srv::GetPath::Request::LEFT_HINA_PLACE),
+                path_and_feedback_client_
+            ), std::string("place hina"));
+
+            auto hina_place_pos = mecha_control::msg::MechAction();
+            hina_place_pos.type = mecha_control::msg::MechAction::HINA;
+            hina_place_pos.hina.command = mecha_control::msg::HinaCmdType::UP_AND_PLACE;
+            ra_list.add_action(RobotAction(hina_place_pos, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina place pos"));
+
+            auto hina_launch = mecha_control::msg::MechAction();
+            hina_launch.type = mecha_control::msg::MechAction::HINA;
+            hina_launch.hina.command = mecha_control::msg::HinaCmdType::LATCH_UNLOCK;
+            ra_list.add_action(RobotAction(hina_launch, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina launch"));
+
+            auto bonbori_on = mecha_control::msg::MechAction();
+            bonbori_on.type = mecha_control::msg::MechAction::BONBORI;
+            bonbori_on.bonbori_enable = true;
+            ra_list.add_action(RobotAction(bonbori_on, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("bonbori on"));
+
+            // auto hina_ready = mecha_control::msg::MechAction();
+            // hina_ready.type = mecha_control::msg::MechAction::HINA;
+            // hina_ready.hina.command = mecha_control::msg::HinaCmdType::READY;
+            // ra_list.add_action(RobotAction(hina_ready, daiza_cmd_client_, hina_cmd_client_, bonbori_srv_client_), std::string("hina up"));
+        }
+        size_t left_seq_index_to = ra_list.size() - 1;
+        ra_list.change_action_to_manager(left_seq_index_from, left_seq_index_to);
+        ra_list.set_name(std::string("LEFT"));
 
         // slider sl({1000, 400}, {1100, 400}, 5.0f, BLUE);
         // toggle_button tb({1000, 300}, 100, 50, GRAY, BLUE);
@@ -308,19 +425,28 @@ private:
             pa.set_map_draw_origin(map_draw_origin);
             pa_enable.move({screenWidth / 2 + 400, screenHeight - 200});
             pa_enable_label.move({screenWidth / 2 + 400 + 10, screenHeight - 200 + 25});
+            ip_reset.move({screenWidth / 2 + 400, screenHeight - 300});
+            ip_reset_label.move({screenWidth / 2 + 400 + 10, screenHeight - 300 + 25});
             req_left_map.move({screenWidth / 2 + 400, screenHeight - 500});
             req_left_map_label.move({screenWidth / 2 + 400 + 10, screenHeight - 500 + 25});
             req_right_map.move({screenWidth / 2 + 400, screenHeight - 400});
             req_right_map_label.move({screenWidth / 2 + 400 + 10, screenHeight - 400 + 25});
-            daiza.move({screenWidth / 2 + 400, screenHeight - 800});
-            daiza_label.move({screenWidth / 2 + 400 + 10, screenHeight - 800 + 25});
-            daiza_status.move({screenWidth / 2 + 400 + 10, screenHeight - 700 + 25});
+            ready_seq.move({screenWidth / 2 + 400, 100});
+            ready_seq_label.move({screenWidth / 2 + 400 + 10, 100 + 25});
+            right_seq.move({screenWidth / 2 + 400, 200});
+            right_seq_label.move({screenWidth / 2 + 400 + 10, 200 + 25});
+            left_seq.move({screenWidth / 2 + 400, 300});
+            left_seq_label.move({screenWidth / 2 + 400 + 10, 300 + 25});
+            ra_list.move({100, screenHeight - 600});
 
             Vector2 mouse = GetMousePosition();
             pa_enable.process(mouse);
+            ip_reset.process(mouse);
             req_left_map.process(mouse);
             req_right_map.process(mouse);
-            daiza.process(mouse);
+            ready_seq.process(mouse);
+            right_seq.process(mouse);
+            left_seq.process(mouse);
             ra_list.process(mouse);
 
             if(pa_enable.get_value() && !CheckCollisionPointRec(mouse, pa_enable.get_rec())){
@@ -341,13 +467,9 @@ private:
                 req.map = cclp::msg::MapRequest::MAP_RIGHT;
                 map_request_pub_->publish(req);
             }
+            
+            
 
-            if(daiza.is_pressed()){
-                robot_actions_manager_.executeRobotAction(0);
-            }
-            robot_actions_manager_.process();
-            std::string status = robot_actions_manager_.getStatus();
-            daiza_status.set_text(status.c_str());
 
             Vector3 tf_vec3;
             std::string err_tf;
@@ -414,9 +536,6 @@ private:
                 req_left_map_label.draw();
                 req_right_map.draw();
                 req_right_map_label.draw();
-                daiza.draw();
-                daiza_label.draw();
-                daiza_status.draw();
                 ra_list.draw();
 
                 std::stringstream ss;

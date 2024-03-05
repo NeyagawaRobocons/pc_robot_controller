@@ -3,11 +3,12 @@
 #include "raymath.h"
 #include "robot_action.hpp"
 #include "button.hpp"
+#include "label.hpp"
 
 class RobotActionList
 {
 public:
-    RobotActionList(Vector2 origin, std::string name, RobotActionsManager *manager): start_button({origin.x + 200, origin.y}, 100, 70, GRAY, GREEN, false, 0.5){
+    RobotActionList(Vector2 origin, std::string name, RobotActionsManager *manager): start_button({origin.x + 200, origin.y}, 100, 70, LIME, GREEN, false, 0.5), start_button_label("Start", {origin.x + 210, origin.y +25}, 20, GRAY){
         this->origin = origin;
         this->name = name;
         this->manager = manager;
@@ -17,14 +18,17 @@ public:
         action_names.push_back(action_name);
     }
     void append_action_to_manager_all(){
+        manager->clear();
         for (auto action : actions)
         {
             indices.push_back(manager->addRobotAction(action));
         }
+        index_from_ = 0;
+        index_to_ = actions.size() - 1;
     }
-    void append_action_to_manager(size_t index){
-        indices.push_back(manager->addRobotAction(actions[index]));
-    }
+    // void append_action_to_manager(size_t index){
+    //     indices.push_back(manager->addRobotAction(actions[index]));
+    // }
     void clear(){
         actions.clear();
         action_names.clear();
@@ -44,6 +48,8 @@ public:
         {
             indices.push_back(manager->addRobotAction(actions[i]));
         }
+        index_from_ = index_from;
+        index_to_ = index_to;
     }
     void move(Vector2 origin){
         this->origin = origin;
@@ -55,6 +61,9 @@ public:
             manager->executeRobotActions(indices[0], indices[indices.size() - 1]);
         }
     }
+    void set_name(std::string name){
+        this->name = name;
+    }
     void draw(){
         DrawText(name.c_str(), origin.x, origin.y + 5, 20, BLACK);
         std::stringstream ss;
@@ -62,19 +71,27 @@ public:
         ss << "Status: " << status;
         DrawText(ss.str().c_str(), origin.x, origin.y + 80, 20, BLACK);
         DrawText("Actions:", origin.x, origin.y + 105, 20, BLACK);
-        for (size_t i = 0; i < action_names.size(); i++)
+        for (size_t i = index_from_; i <= index_to_; i++)
         {
-            DrawText(action_names[i].c_str(), origin.x, origin.y + 135 + 25 * i, 20, manager->isFinishedAction(i) ? BLACK : GRAY);
+            DrawText(action_names[i].c_str(), origin.x, origin.y + 135 + 25 * (i - index_from_), 20, manager->isFinishedAction(i - index_from_) ? BLACK : GRAY);
         }
         start_button.draw();
-        DrawRectangleRoundedLines({origin.x - 5, origin.y - 5, 300.0 + 5.0, 135.0 + action_names.size() *25 + 5}, 0.1, 50, 4.0, GRAY);
+        start_button_label.draw();
+        DrawRectangleRoundedLines({origin.x - 5, origin.y - 5, 300.0 + 5.0, 135.0 + (index_to_ - index_from_) *25 + 5}, 0.1, 50, 4.0, GRAY);
+    }
+    size_t size(){
+        return actions.size();
     }
 private:
     RobotActionsManager *manager;
+    size_t index_from_;
+    size_t index_to_;
     std::vector<RobotAction> actions;
     std::vector<std::string> action_names;
     std::vector<size_t> indices;
     std::string name;
     Vector2 origin;
     push_button start_button;
+    label start_button_label;
+    
 };
