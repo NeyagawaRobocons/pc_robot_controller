@@ -162,17 +162,31 @@ private:
         push_button ip_reset({screenWidth / 2 + 400, screenHeight - 300}, 250, 70, GRAY, BLUE, false, 0.5);
         label ip_reset_label("IP reset", {screenWidth / 2 + 400 + 10, screenHeight - 300 + 25}, 20, BLACK);
 
-        push_button req_left_map({screenWidth / 2 + 400, screenHeight - 500}, 250, 70, GRAY, BLUE, false, 0.5);
-        label req_left_map_label("request left map", {screenWidth / 2 + 400 + 10, screenHeight - 500 + 25}, 20, BLACK);
-        push_button req_right_map({screenWidth / 2 + 400, screenHeight - 400}, 250, 70, GRAY, BLUE, false, 0.5);
-        label req_right_map_label("request right map", {screenWidth / 2 + 400 + 10, screenHeight - 400 + 25}, 20, BLACK);
+        push_button req_left_map({screenWidth / 2 - 300, 280}, 250, 70, GRAY, BLUE, false, 0.5);
+        label req_left_map_label("request left map", {screenWidth / 2 - 300 + 10, 280 + 25}, 20, BLACK);
+        push_button req_right_map({screenWidth / 2 + 50, 280}, 250, 70, GRAY, BLUE, false, 0.5);
+        label req_right_map_label("request right map", {screenWidth / 2 + 50 + 10, 280}, 20, BLACK);
 
         push_button ready_seq({screenWidth / 2 + 400, 100}, 250, 70, GRAY, BLUE, false, 0.5);
         label ready_seq_label("READY", {screenWidth / 2 + 400 + 10, 100 + 25}, 20, BLACK);
-        push_button right_seq({screenWidth / 2 + 400, 200}, 250, 70, SKYBLUE, BLUE, false, 0.5);
-        label right_seq_label("RIGHT", {screenWidth / 2 + 400 + 10, 200 + 25}, 20, BLACK);
-        push_button left_seq({screenWidth / 2 + 400, 300}, 250, 70, PINK, RED, false, 0.5);
-        label left_seq_label("LEFT", {screenWidth / 2 + 400 + 10, 300 + 25}, 20, BLACK);
+        push_button right_seq({screenWidth / 2 + 50, 100}, 250, 150, SKYBLUE, BLUE, false, 0.5);
+        label right_seq_label("RIGHT", {screenWidth / 2 + 50 + 10, 100 + 55}, 40, BLACK);
+        push_button left_seq({screenWidth / 2 - 300, 100}, 250, 150, PINK, RED, false, 0.5);
+        label left_seq_label("LEFT", {screenWidth / 2 - 300 + 10, 100 + 55}, 40, BLACK);
+        push_button left_retry_hina_collect_seq({screenWidth / 2 + 400, 250}, 250, 70, GRAY, BLUE, false, 0.5);
+        label left_retry_hina_collect_seq_label("LEFT HINA COLLECT RETRY", {screenWidth / 2 + 400 + 10, 250 + 25}, 20, BLACK);
+        push_button left_retry_daiza_place_seq({screenWidth / 2 + 400, 350}, 250, 70, GRAY, BLUE, false, 0.5);
+        label left_retry_daiza_place_seq_label("LEFT DAIZA PLACE RETRY", {screenWidth / 2 + 400 + 10, 350 + 25}, 20, BLACK);
+        push_button left_retry_hina_place_seq({screenWidth / 2 + 400, 450}, 250, 70, GRAY, BLUE, false, 0.5);
+        label left_retry_hina_place_seq_label("LEFT HINA PLACE RETRY", {screenWidth / 2 + 400 + 10, 450 + 25}, 20, BLACK);
+        push_button right_retry_daiza_place_seq({screenWidth / 2 + 400, 600}, 250, 70, GRAY, BLUE, false, 0.5);
+        label right_retry_daiza_place_seq_label("RIGHT DAIZA PLACE RETRY", {screenWidth / 2 + 400 + 10, 600 + 25}, 20, BLACK);
+        push_button right_retry_hina_collect_seq({screenWidth / 2 + 400, 700}, 250, 70, GRAY, BLUE, false, 0.5);
+        label right_retry_hina_collect_seq_label("RIGHT HINA COLLECT RETRY", {screenWidth / 2 + 400 + 10, 700 + 25}, 20, BLACK);
+        push_button right_retry_hina_place_seq({screenWidth / 2 + 400, 800}, 250, 70, GRAY, BLUE, false, 0.5);
+        label right_retry_hina_place_seq_label("RIGHT HINA PLACE RETRY", {screenWidth / 2 + 400 + 10, 800 + 25}, 20, BLACK);
+
+        push_button left_retry_hina_place_retry_seq({screenWidth / 2 - 300, 100}, 250, 70, GRAY, BLUE, false, 0.5);
 
         PathCallers path_callers(get_path_client_);
         std::vector<uint8_t> path_names;
@@ -183,6 +197,8 @@ private:
         path_names.push_back(pure_pursuit::srv::GetPath::Request::RIGHT_HINA_COLLECT);
         path_names.push_back(pure_pursuit::srv::GetPath::Request::RIGHT_HINA_PLACE);
         path_names.push_back(pure_pursuit::srv::GetPath::Request::RIGHT_HINA_PLACE_RETRY);
+        path_names.push_back(pure_pursuit::srv::GetPath::Request::RIGHT_DAIZA_PLACE_RETRY);
+        path_names.push_back(pure_pursuit::srv::GetPath::Request::RIGHT_HINA_COLLECT_RETRY);
         path_names.push_back(pure_pursuit::srv::GetPath::Request::LEFT_START);
         path_names.push_back(pure_pursuit::srv::GetPath::Request::LEFT_DAIZA_COLLECT);
         path_names.push_back(pure_pursuit::srv::GetPath::Request::LEFT_DAIZA_PLACE);
@@ -190,6 +206,8 @@ private:
         path_names.push_back(pure_pursuit::srv::GetPath::Request::LEFT_HINA_COLLECT);
         path_names.push_back(pure_pursuit::srv::GetPath::Request::LEFT_HINA_PLACE);
         path_names.push_back(pure_pursuit::srv::GetPath::Request::LEFT_HINA_PLACE_RETRY);
+        path_names.push_back(pure_pursuit::srv::GetPath::Request::LEFT_DAIZA_PLACE_RETRY);
+        path_names.push_back(pure_pursuit::srv::GetPath::Request::LEFT_HINA_COLLECT_RETRY);
         BeginDrawing();
             ClearBackground(RAYWHITE);
             DrawText("Loading paths...", 10, 10, 20, GRAY);
@@ -405,6 +423,282 @@ private:
             // ra_list.add_action(RobotAction(hina_ready, daiza_cmd_client_, hina_cmd_client_, bonbori_srv_client_), std::string("hina up"));
         }
         size_t left_seq_index_to = ra_list.size() - 1;
+        // retry actions
+        // add left retry hina corllect
+        size_t left_retry_hina_collect_index_from = ra_list.size();
+        {
+            auto bonbori_off = mecha_control::msg::MechAction();
+            bonbori_off.type = mecha_control::msg::MechAction::BONBORI;
+            bonbori_off.bonbori_enable = false;
+            ra_list.add_action(RobotAction(bonbori_off, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("bonbori off"));
+
+            ra_list.add_action(RobotAction(
+                path_callers.getPath(pure_pursuit::srv::GetPath::Request::LEFT_HINA_COLLECT_RETRY),
+                path_and_feedback_client_
+            ), std::string("hina zone"));
+
+            auto hina_expand = mecha_control::msg::MechAction();
+            hina_expand.type = mecha_control::msg::MechAction::HINA;
+            hina_expand.hina.command = mecha_control::msg::HinaCmdType::DOWN_AND_TAKE;
+            ra_list.add_action(RobotAction(hina_expand, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina expand"));
+
+            ra_list.add_action(RobotAction(
+                path_callers.getPath(pure_pursuit::srv::GetPath::Request::LEFT_HINA_COLLECT),
+                path_and_feedback_client_
+            ), std::string("move to hina"));
+
+            auto hina_take = mecha_control::msg::MechAction();
+            hina_take.type = mecha_control::msg::MechAction::HINA;
+            hina_take.hina.command = mecha_control::msg::HinaCmdType::UP_AND_CARRY;
+            ra_list.add_action(RobotAction(hina_take, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina up"));
+
+            ra_list.add_action(RobotAction(
+                path_callers.getPath(pure_pursuit::srv::GetPath::Request::LEFT_HINA_PLACE),
+                path_and_feedback_client_
+            ), std::string("place hina"));
+
+            auto hina_place_pos = mecha_control::msg::MechAction();
+            hina_place_pos.type = mecha_control::msg::MechAction::HINA;
+            hina_place_pos.hina.command = mecha_control::msg::HinaCmdType::UP_AND_PLACE;
+            ra_list.add_action(RobotAction(hina_place_pos, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina place pos"));
+
+            auto hina_launch = mecha_control::msg::MechAction();
+            hina_launch.type = mecha_control::msg::MechAction::HINA;
+            hina_launch.hina.command = mecha_control::msg::HinaCmdType::LATCH_UNLOCK;
+            ra_list.add_action(RobotAction(hina_launch, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina launch"));
+
+            auto bonbori_on = mecha_control::msg::MechAction();
+            bonbori_on.type = mecha_control::msg::MechAction::BONBORI;
+            bonbori_on.bonbori_enable = true;
+            ra_list.add_action(RobotAction(bonbori_on, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("bonbori on"));
+        }
+        size_t left_retry_hina_collect_index_to = ra_list.size() - 1;
+        // add left retry daiza place
+        size_t left_retry_daiza_place_index_from = ra_list.size();
+        {
+            auto bonbori_off = mecha_control::msg::MechAction();
+            bonbori_off.type = mecha_control::msg::MechAction::BONBORI;
+            bonbori_off.bonbori_enable = false;
+            ra_list.add_action(RobotAction(bonbori_off, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("bonbori off"));
+
+            ra_list.add_action(RobotAction(
+                path_callers.getPath(pure_pursuit::srv::GetPath::Request::LEFT_DAIZA_PLACE_RETRY),
+                path_and_feedback_client_
+            ), std::string("place daiza"));
+
+            auto daiza_place = mecha_control::msg::MechAction();
+            daiza_place.type = mecha_control::msg::MechAction::DAIZA;
+            daiza_place.daiza.command = mecha_control::msg::DaizaCmdType::EXPAND_AND_PLACE_AND_CONTRACT;
+            ra_list.add_action(RobotAction(daiza_place, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza ready"));
+
+            auto daiza_contract = mecha_control::msg::MechAction();
+            daiza_contract.type = mecha_control::msg::MechAction::DAIZA;
+            daiza_contract.daiza.command = mecha_control::msg::DaizaCmdType::READY;
+            ra_list.add_action(RobotAction(daiza_contract, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza clamp"));
+
+            ra_list.add_action(RobotAction(
+                path_callers.getPath(pure_pursuit::srv::GetPath::Request::LEFT_HINA_ZONE),
+                path_and_feedback_client_
+            ), std::string("hina zone"));
+
+            auto hina_expand = mecha_control::msg::MechAction();
+            hina_expand.type = mecha_control::msg::MechAction::HINA;
+            hina_expand.hina.command = mecha_control::msg::HinaCmdType::DOWN_AND_TAKE;
+            ra_list.add_action(RobotAction(hina_expand, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina expand"));
+
+            ra_list.add_action(RobotAction(
+                path_callers.getPath(pure_pursuit::srv::GetPath::Request::LEFT_HINA_COLLECT),
+                path_and_feedback_client_
+            ), std::string("move to hina"));
+
+            auto hina_take = mecha_control::msg::MechAction();
+            hina_take.type = mecha_control::msg::MechAction::HINA;
+            hina_take.hina.command = mecha_control::msg::HinaCmdType::UP_AND_CARRY;
+            ra_list.add_action(RobotAction(hina_take, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina up"));
+
+            ra_list.add_action(RobotAction(
+                path_callers.getPath(pure_pursuit::srv::GetPath::Request::LEFT_HINA_PLACE),
+                path_and_feedback_client_
+            ), std::string("place hina"));
+
+            auto hina_place_pos = mecha_control::msg::MechAction();
+            hina_place_pos.type = mecha_control::msg::MechAction::HINA;
+            hina_place_pos.hina.command = mecha_control::msg::HinaCmdType::UP_AND_PLACE;
+            ra_list.add_action(RobotAction(hina_place_pos, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina place pos"));
+
+            auto hina_launch = mecha_control::msg::MechAction();
+            hina_launch.type = mecha_control::msg::MechAction::HINA;
+            hina_launch.hina.command = mecha_control::msg::HinaCmdType::LATCH_UNLOCK;
+            ra_list.add_action(RobotAction(hina_launch, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina launch"));
+
+            auto bonbori_on = mecha_control::msg::MechAction();
+            bonbori_on.type = mecha_control::msg::MechAction::BONBORI;
+            bonbori_on.bonbori_enable = true;
+            ra_list.add_action(RobotAction(bonbori_on, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("bonbori on"));
+
+        }
+        size_t left_retry_daiza_place_index_to = ra_list.size() - 1;
+        // add left retry hina place
+        size_t left_retry_hina_place_index_from = ra_list.size();
+        {
+            ra_list.add_action(RobotAction(
+                path_callers.getPath(pure_pursuit::srv::GetPath::Request::LEFT_HINA_PLACE_RETRY),
+                path_and_feedback_client_
+            ), std::string("place hina"));
+
+            ra_list.add_action(RobotAction(
+                path_callers.getPath(pure_pursuit::srv::GetPath::Request::LEFT_HINA_PLACE),
+                path_and_feedback_client_
+            ), std::string("place hina"));
+
+            auto hina_place_pos = mecha_control::msg::MechAction();
+            hina_place_pos.type = mecha_control::msg::MechAction::HINA;
+            hina_place_pos.hina.command = mecha_control::msg::HinaCmdType::UP_AND_PLACE;
+            ra_list.add_action(RobotAction(hina_place_pos, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina place pos"));
+
+            auto hina_launch = mecha_control::msg::MechAction();
+            hina_launch.type = mecha_control::msg::MechAction::HINA;
+            hina_launch.hina.command = mecha_control::msg::HinaCmdType::LATCH_UNLOCK;
+            ra_list.add_action(RobotAction(hina_launch, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina launch"));
+
+            auto bonbori_on = mecha_control::msg::MechAction();
+            bonbori_on.type = mecha_control::msg::MechAction::BONBORI;
+            bonbori_on.bonbori_enable = true;
+            ra_list.add_action(RobotAction(bonbori_on, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("bonbori on"));
+        }
+        size_t left_retry_hina_place_index_to = ra_list.size() - 1;
+        // add right retry hina corllect
+        size_t right_retry_hina_collect_index_from = ra_list.size();
+        {
+            ra_list.add_action(RobotAction(
+                path_callers.getPath(pure_pursuit::srv::GetPath::Request::RIGHT_HINA_COLLECT_RETRY),
+                path_and_feedback_client_
+            ), std::string("hina zone"));
+
+            auto hina_expand = mecha_control::msg::MechAction();
+            hina_expand.type = mecha_control::msg::MechAction::HINA;
+            hina_expand.hina.command = mecha_control::msg::HinaCmdType::DOWN_AND_TAKE;
+            ra_list.add_action(RobotAction(hina_expand, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina expand"));
+
+            ra_list.add_action(RobotAction(
+                path_callers.getPath(pure_pursuit::srv::GetPath::Request::RIGHT_HINA_COLLECT),
+                path_and_feedback_client_
+            ), std::string("move to hina"));
+
+            auto hina_take = mecha_control::msg::MechAction();
+            hina_take.type = mecha_control::msg::MechAction::HINA;
+            hina_take.hina.command = mecha_control::msg::HinaCmdType::UP_AND_CARRY;
+            ra_list.add_action(RobotAction(hina_take, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina up"));
+
+            ra_list.add_action(RobotAction(
+                path_callers.getPath(pure_pursuit::srv::GetPath::Request::RIGHT_HINA_PLACE),
+                path_and_feedback_client_
+            ), std::string("place hina"));
+
+            auto hina_place_pos = mecha_control::msg::MechAction();
+            hina_place_pos.type = mecha_control::msg::MechAction::HINA;
+            hina_place_pos.hina.command = mecha_control::msg::HinaCmdType::UP_AND_PLACE;
+            ra_list.add_action(RobotAction(hina_place_pos, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina place pos"));
+
+            auto hina_launch = mecha_control::msg::MechAction();
+            hina_launch.type = mecha_control::msg::MechAction::HINA;
+            hina_launch.hina.command = mecha_control::msg::HinaCmdType::LATCH_UNLOCK;
+            ra_list.add_action(RobotAction(hina_launch, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina launch"));
+
+            auto bonbori_on = mecha_control::msg::MechAction();
+            bonbori_on.type = mecha_control::msg::MechAction::BONBORI;
+            bonbori_on.bonbori_enable = true;
+            ra_list.add_action(RobotAction(bonbori_on, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("bonbori on"));
+        }
+        size_t right_retry_hina_collect_index_to = ra_list.size() - 1;
+        // add right retry daiza place
+        size_t right_retry_daiza_place_index_from = ra_list.size();
+        {
+            ra_list.add_action(RobotAction(
+                path_callers.getPath(pure_pursuit::srv::GetPath::Request::RIGHT_DAIZA_PLACE_RETRY),
+                path_and_feedback_client_
+            ), std::string("place daiza"));
+
+            auto daiza_place = mecha_control::msg::MechAction();
+            daiza_place.type = mecha_control::msg::MechAction::DAIZA;
+            daiza_place.daiza.command = mecha_control::msg::DaizaCmdType::EXPAND_AND_PLACE_AND_CONTRACT;
+            ra_list.add_action(RobotAction(daiza_place, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza ready"));
+
+            auto daiza_contract = mecha_control::msg::MechAction();
+            daiza_contract.type = mecha_control::msg::MechAction::DAIZA;
+            daiza_contract.daiza.command = mecha_control::msg::DaizaCmdType::READY;
+            ra_list.add_action(RobotAction(daiza_contract, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza clamp"));
+
+            ra_list.add_action(RobotAction(
+                path_callers.getPath(pure_pursuit::srv::GetPath::Request::RIGHT_HINA_ZONE),
+                path_and_feedback_client_
+            ), std::string("hina zone"));
+
+            auto hina_expand = mecha_control::msg::MechAction();
+            hina_expand.type = mecha_control::msg::MechAction::HINA;
+            hina_expand.hina.command = mecha_control::msg::HinaCmdType::DOWN_AND_TAKE;
+            ra_list.add_action(RobotAction(hina_expand, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina expand"));
+
+            ra_list.add_action(RobotAction(
+                path_callers.getPath(pure_pursuit::srv::GetPath::Request::RIGHT_HINA_COLLECT),
+                path_and_feedback_client_
+            ), std::string("move to hina"));
+
+            auto hina_take = mecha_control::msg::MechAction();
+            hina_take.type = mecha_control::msg::MechAction::HINA;
+            hina_take.hina.command = mecha_control::msg::HinaCmdType::UP_AND_CARRY;
+            ra_list.add_action(RobotAction(hina_take, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina up"));
+
+            ra_list.add_action(RobotAction(
+                path_callers.getPath(pure_pursuit::srv::GetPath::Request::RIGHT_HINA_PLACE),
+                path_and_feedback_client_
+            ), std::string("place hina"));
+
+            auto hina_place_pos = mecha_control::msg::MechAction();
+            hina_place_pos.type = mecha_control::msg::MechAction::HINA;
+            hina_place_pos.hina.command = mecha_control::msg::HinaCmdType::UP_AND_PLACE;
+            ra_list.add_action(RobotAction(hina_place_pos, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina place pos"));
+
+            auto hina_launch = mecha_control::msg::MechAction();
+            hina_launch.type = mecha_control::msg::MechAction::HINA;
+            hina_launch.hina.command = mecha_control::msg::HinaCmdType::LATCH_UNLOCK;
+            ra_list.add_action(RobotAction(hina_launch, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina launch"));
+
+            auto bonbori_on = mecha_control::msg::MechAction();
+            bonbori_on.type = mecha_control::msg::MechAction::BONBORI;
+            bonbori_on.bonbori_enable = true;
+            ra_list.add_action(RobotAction(bonbori_on, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("bonbori on"));
+        }
+        size_t right_retry_daiza_place_index_to = ra_list.size() - 1;
+        // add right retry hina place
+        size_t right_retry_hina_place_index_from = ra_list.size();
+        {
+            ra_list.add_action(RobotAction(
+                path_callers.getPath(pure_pursuit::srv::GetPath::Request::RIGHT_HINA_PLACE_RETRY),
+                path_and_feedback_client_
+            ), std::string("place hina"));
+
+            ra_list.add_action(RobotAction(
+                path_callers.getPath(pure_pursuit::srv::GetPath::Request::RIGHT_HINA_PLACE),
+                path_and_feedback_client_
+            ), std::string("place hina"));
+
+            auto hina_place_pos = mecha_control::msg::MechAction();
+            hina_place_pos.type = mecha_control::msg::MechAction::HINA;
+            hina_place_pos.hina.command = mecha_control::msg::HinaCmdType::UP_AND_PLACE;
+            ra_list.add_action(RobotAction(hina_place_pos, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina place pos"));
+
+            auto hina_launch = mecha_control::msg::MechAction();
+            hina_launch.type = mecha_control::msg::MechAction::HINA;
+            hina_launch.hina.command = mecha_control::msg::HinaCmdType::LATCH_UNLOCK;
+            ra_list.add_action(RobotAction(hina_launch, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina launch"));
+
+            auto bonbori_on = mecha_control::msg::MechAction();
+            bonbori_on.type = mecha_control::msg::MechAction::BONBORI;
+            bonbori_on.bonbori_enable = true;
+            ra_list.add_action(RobotAction(bonbori_on, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("bonbori on"));
+        }
+        size_t right_retry_hina_place_index_to = ra_list.size() - 1;
         ra_list.change_action_to_manager(left_seq_index_from, left_seq_index_to);
         ra_list.set_name(std::string("LEFT"));
 
@@ -432,16 +726,31 @@ private:
             pa_enable_label.move({screenWidth / 2 + 400 + 10, screenHeight - 200 + 25});
             ip_reset.move({screenWidth / 2 + 400, screenHeight - 300});
             ip_reset_label.move({screenWidth / 2 + 400 + 10, screenHeight - 300 + 25});
-            req_left_map.move({screenWidth / 2 + 400, screenHeight - 500});
-            req_left_map_label.move({screenWidth / 2 + 400 + 10, screenHeight - 500 + 25});
-            req_right_map.move({screenWidth / 2 + 400, screenHeight - 400});
-            req_right_map_label.move({screenWidth / 2 + 400 + 10, screenHeight - 400 + 25});
+            
+            req_left_map.move({screenWidth / 2 - 300, 280});
+            req_left_map_label.move({screenWidth / 2 - 300 + 10, 280 + 25});
+            req_right_map.move({screenWidth / 2 + 50, 280});
+            req_right_map_label.move({screenWidth / 2 + 50 + 10, 280 + 25});
+
             ready_seq.move({screenWidth / 2 + 400, 100});
             ready_seq_label.move({screenWidth / 2 + 400 + 10, 100 + 25});
-            right_seq.move({screenWidth / 2 + 400, 200});
-            right_seq_label.move({screenWidth / 2 + 400 + 10, 200 + 25});
-            left_seq.move({screenWidth / 2 + 400, 300});
-            left_seq_label.move({screenWidth / 2 + 400 + 10, 300 + 25});
+            right_seq.move({screenWidth / 2 + 50, 100});
+            right_seq_label.move({screenWidth / 2 + 50 + 10, 100 + 55});
+            left_seq.move({screenWidth / 2 - 300, 100});
+            left_seq_label.move({screenWidth / 2 - 300 + 10, 100 + 55});
+            left_retry_hina_collect_seq.move({screenWidth / 2 + 400, 250});
+            left_retry_hina_collect_seq_label.move({screenWidth / 2 + 400 + 10, 250 + 25});
+            left_retry_daiza_place_seq.move({screenWidth / 2 + 400, 350});
+            left_retry_daiza_place_seq_label.move({screenWidth / 2 + 400 + 10, 350 + 25});
+            left_retry_hina_place_seq.move({screenWidth / 2 + 400, 450});
+            left_retry_hina_place_seq_label.move({screenWidth / 2 + 400 + 10, 450 + 25});
+            right_retry_hina_collect_seq.move({screenWidth / 2 + 400, 600});
+            right_retry_hina_collect_seq_label.move({screenWidth / 2 + 400 + 10, 600 + 25});
+            right_retry_daiza_place_seq.move({screenWidth / 2 + 400, 700});
+            right_retry_daiza_place_seq_label.move({screenWidth / 2 + 400 + 10, 700 + 25});
+            right_retry_hina_place_seq.move({screenWidth / 2 + 400, 800});
+            right_retry_hina_place_seq_label.move({screenWidth / 2 + 400 + 10, 800 + 25});
+
             ra_list.move({100, screenHeight - 600});
 
             Vector2 mouse = GetMousePosition();
@@ -452,6 +761,12 @@ private:
             ready_seq.process(mouse);
             right_seq.process(mouse);
             left_seq.process(mouse);
+            left_retry_hina_collect_seq.process(mouse);
+            left_retry_daiza_place_seq.process(mouse);
+            left_retry_hina_place_seq.process(mouse);
+            right_retry_hina_collect_seq.process(mouse);
+            right_retry_daiza_place_seq.process(mouse);
+            right_retry_hina_place_seq.process(mouse);
             ra_list.process(mouse, switchs_[0]);
 
             if(pa_enable.get_value() && !CheckCollisionPointRec(mouse, pa_enable.get_rec())){
@@ -484,6 +799,30 @@ private:
             if(left_seq.is_pressed()){
                 ra_list.change_action_to_manager(left_seq_index_from, left_seq_index_to);
                 ra_list.set_name(std::string("LEFT"));
+            }
+            if(left_retry_hina_collect_seq.is_pressed()){
+                ra_list.change_action_to_manager(left_retry_hina_collect_index_from, left_retry_hina_collect_index_to);
+                ra_list.set_name(std::string("LEFT_RETRY_HINA_COLLECT"));
+            }
+            if(left_retry_daiza_place_seq.is_pressed()){
+                ra_list.change_action_to_manager(left_retry_daiza_place_index_from, left_retry_daiza_place_index_to);
+                ra_list.set_name(std::string("LEFT_RETRY_DAIZA_PLACE"));
+            }
+            if(left_retry_hina_place_seq.is_pressed()){
+                ra_list.change_action_to_manager(left_retry_hina_place_index_from, left_retry_hina_place_index_to);
+                ra_list.set_name(std::string("LEFT_RETRY_HINA_PLACE"));
+            }
+            if(right_retry_hina_collect_seq.is_pressed()){
+                ra_list.change_action_to_manager(right_retry_hina_collect_index_from, right_retry_hina_collect_index_to);
+                ra_list.set_name(std::string("RIGHT_RETRY_HINA_COLLECT"));
+            }
+            if(right_retry_daiza_place_seq.is_pressed()){
+                ra_list.change_action_to_manager(right_retry_daiza_place_index_from, right_retry_daiza_place_index_to);
+                ra_list.set_name(std::string("RIGHT_RETRY_DAIZA_PLACE"));
+            }
+            if(right_retry_hina_place_seq.is_pressed()){
+                ra_list.change_action_to_manager(right_retry_hina_place_index_from, right_retry_hina_place_index_to);
+                ra_list.set_name(std::string("RIGHT_RETRY_HINA_PLACE"));
             }
 
 
@@ -572,6 +911,18 @@ private:
                 right_seq_label.draw();
                 left_seq.draw();
                 left_seq_label.draw();
+                left_retry_hina_collect_seq.draw();
+                left_retry_hina_collect_seq_label.draw();
+                left_retry_daiza_place_seq.draw();
+                left_retry_daiza_place_seq_label.draw();
+                left_retry_hina_place_seq.draw();
+                left_retry_hina_place_seq_label.draw();
+                right_retry_hina_collect_seq.draw();
+                right_retry_hina_collect_seq_label.draw();
+                right_retry_daiza_place_seq.draw();
+                right_retry_daiza_place_seq_label.draw();
+                right_retry_hina_place_seq.draw();
+                right_retry_hina_place_seq_label.draw();
                 ra_list.draw();
 
                 std::stringstream ss;
