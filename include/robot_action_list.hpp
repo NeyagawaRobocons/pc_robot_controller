@@ -60,7 +60,10 @@ public:
         start_button.process(mouse);
         if(push_start){
             start_button.push();
+        }else if(last_push_start){
+            start_button.unpush();
         }
+        last_push_start = push_start;
         if(start_button.is_pressed() && manager->isFinished()){
             std::cout << "Start button pressed" << std::endl;
             manager->executeRobotActions(0, index_to_ - index_from_ + 1);
@@ -100,5 +103,5 @@ private:
     Vector2 origin;
     push_button start_button;
     label start_button_label;
-    
+    bool last_push_start = false;
 };
