@@ -1,7 +1,6 @@
 #pragma once
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
-#include "pure_pursuit/msg/path2_d_with_speed.hpp"
 #include "mecha_control/msg/mech_action.hpp"
 #include "pure_pursuit/srv/get_path.hpp"
 #include "pure_pursuit/action/path_and_feedback.hpp"

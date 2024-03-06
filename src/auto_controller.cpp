@@ -15,7 +15,6 @@
 #include "nucleo_agent/msg/actuator_commands.hpp"
 #include "cclp/msg/line_array.hpp"
 #include "cclp/msg/map_request.hpp"
-#include "pure_pursuit/msg/path2_d_with_speed.hpp"
 #include "mecha_control/msg/mech_action.hpp"
 #include "pure_pursuit/action/path_and_feedback.hpp"
 #include "pure_pursuit/srv/get_path.hpp"
