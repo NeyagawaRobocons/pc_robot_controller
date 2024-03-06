@@ -677,6 +677,21 @@ public:
         return robot_actions_.size();
     };
     std::vector<Line> getCurrentPath() {
+        if(this->isFinished()){
+            std::vector<Line> lines;
+            for (auto &ra: robot_actions_){
+                if(ra.path_.path.size() >= 2){
+                    for (size_t i = 0; i < ra.path_.path.size() - 1; i++) {
+                        Line l;
+                        l.from = {(float)ra.path_.path[i].x, (float)ra.path_.path[i].y};
+                        l.to = {(float)ra.path_.path[i + 1].x, (float)ra.path_.path[i + 1].y};
+                        lines.push_back(l);
+                    
+                    }
+                }
+            }
+            return lines;
+        }
         if(robot_actions_index_ < robot_actions_.size())if(robot_actions_[robot_actions_index_].path_.path.size() >= 2){
             std::vector<Line> lines;
             for (size_t i = 0; i < robot_actions_[robot_actions_index_].path_.path.size() - 1; i++) {
