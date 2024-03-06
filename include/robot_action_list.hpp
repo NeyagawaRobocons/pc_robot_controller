@@ -56,8 +56,11 @@ public:
         start_button.move({origin.x + 150, origin.y});
         start_button_label.move({origin.x + 160, origin.y + 25});
     }
-    void process(Vector2 mouse){
+    void process(Vector2 mouse, bool push_start = false){
         start_button.process(mouse);
+        if(push_start){
+            start_button.push();
+        }
         if(start_button.is_pressed() && manager->isFinished()){
             std::cout << "Start button pressed" << std::endl;
             manager->executeRobotActions(0, index_to_ - index_from_ + 1);

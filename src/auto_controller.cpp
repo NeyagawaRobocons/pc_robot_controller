@@ -22,6 +22,7 @@
 #include "mecha_control/action/daiza_cmd.hpp"
 #include "mecha_control/action/hina_cmd.hpp"
 #include "std_msgs/msg/bool.hpp"
+#include "std_msgs/msg/byte_multi_array.hpp"
 #include "std_srvs/srv/set_bool.hpp"
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
@@ -50,6 +51,7 @@ public:
         std::string line_map = this->declare_parameter("line_map_topic", "line_map");
         std::string map_request = this->declare_parameter("map_request_topic", "map_request");
         std::string mouse_point_pub = this->declare_parameter("mouse_point_pub_topic", "initial_pose");
+        std::string switchs_topic = this->declare_parameter("switchs_topic", "control_switches");
         map_frame_ = this->declare_parameter("map_frame", "map");
         base_frame_ = this->declare_parameter("base_frame", "corrected_base_link");
 
@@ -74,6 +76,8 @@ public:
         hina_cmd_client_ = rclcpp_action::create_client<mecha_control::action::HinaCmd>(this, "hina_cmd");
         // bonbori_srv_client_ = this->create_client<std_srvs::srv::SetBool>("set_bonbori");
         bonbori_msg_pub_ = this->create_publisher<std_msgs::msg::Bool>("bonbori_msg", 10);
+        switchs_sub_ = this->create_subscription<std_msgs::msg::ByteMultiArray>(
+            switchs_topic, 10, std::bind(&AutoController::switchs_callback, this, std::placeholders::_1));
         // Create a tf buffer and listener
         tf_buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
         tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
@@ -97,6 +101,7 @@ private:
     rclcpp_action::Client<mecha_control::action::HinaCmd>::SharedPtr hina_cmd_client_;
     // rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr bonbori_srv_client_;
     rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr bonbori_msg_pub_;
+    rclcpp::Subscription<std_msgs::msg::ByteMultiArray>::SharedPtr switchs_sub_;
     std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
     std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
     std::string map_frame_;
@@ -111,6 +116,7 @@ private:
     Vector3 robot_vec_;
     float input_vel_[4];
     std::vector<Line> path_;
+    std::array<bool, 4> switchs_;
     RobotActionsManager robot_actions_manager_;
 
 
@@ -447,7 +453,7 @@ private:
             ready_seq.process(mouse);
             right_seq.process(mouse);
             left_seq.process(mouse);
-            ra_list.process(mouse);
+            ra_list.process(mouse, switchs_[0]);
 
             if(pa_enable.get_value() && !CheckCollisionPointRec(mouse, pa_enable.get_rec())){
                 if (pa.process(mouse)){
@@ -660,6 +666,16 @@ private:
             lines.push_back(l);
         }
         RCLCPP_INFO(this->get_logger(), "Received %d lines", lines.size());
+    }
+
+    void switchs_callback(const std_msgs::msg::ByteMultiArray::SharedPtr msg){
+        if(msg->data.size() != 4){
+            RCLCPP_ERROR(this->get_logger(), "Invalid switchs message size");
+            return;
+        }
+        for(int i = 0; i < 4; i++){
+            switchs_[i] = msg->data[i];
+        }
     }
 };
 
