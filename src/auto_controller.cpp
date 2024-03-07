@@ -257,7 +257,7 @@ private:
 
             auto hina_take_f = mecha_control::msg::MechAction();
             hina_take_f.type = mecha_control::msg::MechAction::HINA;
-            hina_take_f.hina.command = mecha_control::msg::HinaCmdType::UP_AND_CARRY;
+            hina_take_f.hina.command = mecha_control::msg::HinaCmdType::UP;
             ra_list.add_action(RobotAction(hina_take_f, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina up"));
 
             ra_list.add_action(RobotAction(
@@ -351,7 +351,7 @@ private:
 
             auto hina_take_f = mecha_control::msg::MechAction();
             hina_take_f.type = mecha_control::msg::MechAction::HINA;
-            hina_take_f.hina.command = mecha_control::msg::HinaCmdType::UP_AND_CARRY;
+            hina_take_f.hina.command = mecha_control::msg::HinaCmdType::UP;
             ra_list.add_action(RobotAction(hina_take_f, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina up"));
 
             ra_list.add_action(RobotAction(
@@ -446,7 +446,7 @@ private:
 
             auto hina_take_f = mecha_control::msg::MechAction();
             hina_take_f.type = mecha_control::msg::MechAction::HINA;
-            hina_take_f.hina.command = mecha_control::msg::HinaCmdType::UP_AND_CARRY;
+            hina_take_f.hina.command = mecha_control::msg::HinaCmdType::UP;
             ra_list.add_action(RobotAction(hina_take_f, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina up"));
 
             ra_list.add_action(RobotAction(
@@ -505,7 +505,7 @@ private:
 
             auto hina_take_f = mecha_control::msg::MechAction();
             hina_take_f.type = mecha_control::msg::MechAction::HINA;
-            hina_take_f.hina.command = mecha_control::msg::HinaCmdType::UP_AND_CARRY;
+            hina_take_f.hina.command = mecha_control::msg::HinaCmdType::UP;
             ra_list.add_action(RobotAction(hina_take_f, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina up"));
 
             ra_list.add_action(RobotAction(
@@ -580,7 +580,7 @@ private:
 
             auto hina_take_f = mecha_control::msg::MechAction();
             hina_take_f.type = mecha_control::msg::MechAction::HINA;
-            hina_take_f.hina.command = mecha_control::msg::HinaCmdType::UP_AND_CARRY;
+            hina_take_f.hina.command = mecha_control::msg::HinaCmdType::UP;
             ra_list.add_action(RobotAction(hina_take_f, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina up"));
 
             ra_list.add_action(RobotAction(
@@ -619,7 +619,7 @@ private:
 
             auto hina_take_f = mecha_control::msg::MechAction();
             hina_take_f.type = mecha_control::msg::MechAction::HINA;
-            hina_take_f.hina.command = mecha_control::msg::HinaCmdType::UP_AND_CARRY;
+            hina_take_f.hina.command = mecha_control::msg::HinaCmdType::UP;
             ra_list.add_action(RobotAction(hina_take_f, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina up"));
 
             ra_list.add_action(RobotAction(
@@ -678,7 +678,7 @@ private:
 
             auto hina_take_f = mecha_control::msg::MechAction();
             hina_take_f.type = mecha_control::msg::MechAction::HINA;
-            hina_take_f.hina.command = mecha_control::msg::HinaCmdType::UP_AND_CARRY;
+            hina_take_f.hina.command = mecha_control::msg::HinaCmdType::UP;
             ra_list.add_action(RobotAction(hina_take_f, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina up"));
             
             ra_list.add_action(RobotAction(
@@ -752,7 +752,7 @@ private:
 
             auto hina_take_f = mecha_control::msg::MechAction();
             hina_take_f.type = mecha_control::msg::MechAction::HINA;
-            hina_take_f.hina.command = mecha_control::msg::HinaCmdType::UP_AND_CARRY;
+            hina_take_f.hina.command = mecha_control::msg::HinaCmdType::UP;
             ra_list.add_action(RobotAction(hina_take_f, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina up"));
 
             ra_list.add_action(RobotAction(
