@@ -300,10 +300,10 @@ private:
             daiza_align.daiza.command = mecha_control::msg::DaizaCmdType::CLAMP;
             ra_list.add_action(RobotAction(daiza_align, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza align"));
 
-            auto daiza_contract = mecha_control::msg::MechAction();
-            daiza_contract.type = mecha_control::msg::MechAction::DAIZA;
-            daiza_contract.daiza.command = mecha_control::msg::DaizaCmdType::EXPAND_AND_PLACE_AND_CONTRACT;
-            ra_list.add_action(RobotAction(daiza_contract, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza unclamp"));
+            auto daiza_unclamp_aligned = mecha_control::msg::MechAction();
+            daiza_unclamp_aligned.type = mecha_control::msg::MechAction::DAIZA;
+            daiza_unclamp_aligned.daiza.command = mecha_control::msg::DaizaCmdType::EXPAND_AND_PLACE_AND_CONTRACT;
+            ra_list.add_action(RobotAction(daiza_unclamp_aligned, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza unclamp"));
 
             auto daiza_contract = mecha_control::msg::MechAction();
             daiza_contract.type = mecha_control::msg::MechAction::DAIZA;
@@ -409,15 +409,10 @@ private:
             daiza_align.daiza.command = mecha_control::msg::DaizaCmdType::CLAMP;
             ra_list.add_action(RobotAction(daiza_align, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza align"));
 
-            auto daiza_contract = mecha_control::msg::MechAction();
-            daiza_contract.type = mecha_control::msg::MechAction::DAIZA;
-            daiza_contract.daiza.command = mecha_control::msg::DaizaCmdType::EXPAND_AND_PLACE_AND_CONTRACT;
-            ra_list.add_action(RobotAction(daiza_contract, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza unclamp"));
-
-            auto daiza_contract = mecha_control::msg::MechAction();
-            daiza_contract.type = mecha_control::msg::MechAction::DAIZA;
-            daiza_contract.daiza.command = mecha_control::msg::DaizaCmdType::READY;
-            ra_list.add_action(RobotAction(daiza_contract, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza clamp"));
+            auto daiza_unclamp_aligned = mecha_control::msg::MechAction();
+            daiza_unclamp_aligned.type = mecha_control::msg::MechAction::DAIZA;
+            daiza_unclamp_aligned.daiza.command = mecha_control::msg::DaizaCmdType::EXPAND_AND_PLACE_AND_CONTRACT;
+            ra_list.add_action(RobotAction(daiza_unclamp_aligned, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza unclamp"));
 
             auto daiza_contract = mecha_control::msg::MechAction();
             daiza_contract.type = mecha_control::msg::MechAction::DAIZA;
@@ -563,15 +558,10 @@ private:
             daiza_align.daiza.command = mecha_control::msg::DaizaCmdType::CLAMP;
             ra_list.add_action(RobotAction(daiza_align, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza align"));
 
-            auto daiza_contract = mecha_control::msg::MechAction();
-            daiza_contract.type = mecha_control::msg::MechAction::DAIZA;
-            daiza_contract.daiza.command = mecha_control::msg::DaizaCmdType::EXPAND_AND_PLACE_AND_CONTRACT;
-            ra_list.add_action(RobotAction(daiza_contract, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza unclamp"));
-
-            auto daiza_contract = mecha_control::msg::MechAction();
-            daiza_contract.type = mecha_control::msg::MechAction::DAIZA;
-            daiza_contract.daiza.command = mecha_control::msg::DaizaCmdType::READY;
-            ra_list.add_action(RobotAction(daiza_contract, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza clamp"));
+            auto daiza_unclamp_aligned = mecha_control::msg::MechAction();
+            daiza_unclamp_aligned.type = mecha_control::msg::MechAction::DAIZA;
+            daiza_unclamp_aligned.daiza.command = mecha_control::msg::DaizaCmdType::EXPAND_AND_PLACE_AND_CONTRACT;
+            ra_list.add_action(RobotAction(daiza_unclamp_aligned, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza unclamp"));
 
             auto daiza_contract = mecha_control::msg::MechAction();
             daiza_contract.type = mecha_control::msg::MechAction::DAIZA;
@@ -756,15 +746,10 @@ private:
             daiza_align.daiza.command = mecha_control::msg::DaizaCmdType::CLAMP;
             ra_list.add_action(RobotAction(daiza_align, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza align"));
 
-            auto daiza_contract = mecha_control::msg::MechAction();
-            daiza_contract.type = mecha_control::msg::MechAction::DAIZA;
-            daiza_contract.daiza.command = mecha_control::msg::DaizaCmdType::EXPAND_AND_PLACE_AND_CONTRACT;
-            ra_list.add_action(RobotAction(daiza_contract, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza unclamp"));
-
-            auto daiza_contract = mecha_control::msg::MechAction();
-            daiza_contract.type = mecha_control::msg::MechAction::DAIZA;
-            daiza_contract.daiza.command = mecha_control::msg::DaizaCmdType::READY;
-            ra_list.add_action(RobotAction(daiza_contract, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza clamp"));
+            auto daiza_unclamp_aligned = mecha_control::msg::MechAction();
+            daiza_unclamp_aligned.type = mecha_control::msg::MechAction::DAIZA;
+            daiza_unclamp_aligned.daiza.command = mecha_control::msg::DaizaCmdType::EXPAND_AND_PLACE_AND_CONTRACT;
+            ra_list.add_action(RobotAction(daiza_unclamp_aligned, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza unclamp"));
 
             auto daiza_contract = mecha_control::msg::MechAction();
             daiza_contract.type = mecha_control::msg::MechAction::DAIZA;
