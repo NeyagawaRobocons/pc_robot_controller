@@ -255,6 +255,11 @@ private:
             bonbori_off.bonbori_enable = false;
             ra_list.add_action(RobotAction(bonbori_off, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("bonbori off"));
 
+            auto hina_take_f = mecha_control::msg::MechAction();
+            hina_take_f.type = mecha_control::msg::MechAction::HINA;
+            hina_take_f.hina.command = mecha_control::msg::HinaCmdType::UP_AND_CARRY;
+            ra_list.add_action(RobotAction(hina_take_f, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina up"));
+
             ra_list.add_action(RobotAction(
                 path_callers.getPath(pure_pursuit::srv::GetPath::Request::RIGHT_START),
                 path_and_feedback_client_
@@ -343,6 +348,11 @@ private:
             bonbori_off.type = mecha_control::msg::MechAction::BONBORI;
             bonbori_off.bonbori_enable = false;
             ra_list.add_action(RobotAction(bonbori_off, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("bonbori off"));
+
+            auto hina_take_f = mecha_control::msg::MechAction();
+            hina_take_f.type = mecha_control::msg::MechAction::HINA;
+            hina_take_f.hina.command = mecha_control::msg::HinaCmdType::UP_AND_CARRY;
+            ra_list.add_action(RobotAction(hina_take_f, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina up"));
 
             ra_list.add_action(RobotAction(
                 path_callers.getPath(pure_pursuit::srv::GetPath::Request::LEFT_START),
@@ -434,6 +444,11 @@ private:
             bonbori_off.bonbori_enable = false;
             ra_list.add_action(RobotAction(bonbori_off, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("bonbori off"));
 
+            auto hina_take_f = mecha_control::msg::MechAction();
+            hina_take_f.type = mecha_control::msg::MechAction::HINA;
+            hina_take_f.hina.command = mecha_control::msg::HinaCmdType::UP_AND_CARRY;
+            ra_list.add_action(RobotAction(hina_take_f, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina up"));
+
             ra_list.add_action(RobotAction(
                 path_callers.getPath(pure_pursuit::srv::GetPath::Request::LEFT_HINA_COLLECT_RETRY),
                 path_and_feedback_client_
@@ -487,6 +502,11 @@ private:
             bonbori_off.type = mecha_control::msg::MechAction::BONBORI;
             bonbori_off.bonbori_enable = false;
             ra_list.add_action(RobotAction(bonbori_off, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("bonbori off"));
+
+            auto hina_take_f = mecha_control::msg::MechAction();
+            hina_take_f.type = mecha_control::msg::MechAction::HINA;
+            hina_take_f.hina.command = mecha_control::msg::HinaCmdType::UP_AND_CARRY;
+            ra_list.add_action(RobotAction(hina_take_f, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina up"));
 
             ra_list.add_action(RobotAction(
                 path_callers.getPath(pure_pursuit::srv::GetPath::Request::LEFT_DAIZA_PLACE_RETRY),
@@ -553,6 +573,16 @@ private:
         // add left retry hina place
         size_t left_retry_hina_place_index_from = ra_list.size();
         {
+            auto bonbori_off = mecha_control::msg::MechAction();
+            bonbori_off.type = mecha_control::msg::MechAction::BONBORI;
+            bonbori_off.bonbori_enable = false;
+            ra_list.add_action(RobotAction(bonbori_off, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("bonbori off"));
+
+            auto hina_take_f = mecha_control::msg::MechAction();
+            hina_take_f.type = mecha_control::msg::MechAction::HINA;
+            hina_take_f.hina.command = mecha_control::msg::HinaCmdType::UP_AND_CARRY;
+            ra_list.add_action(RobotAction(hina_take_f, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina up"));
+
             ra_list.add_action(RobotAction(
                 path_callers.getPath(pure_pursuit::srv::GetPath::Request::LEFT_HINA_PLACE_RETRY),
                 path_and_feedback_client_
@@ -586,6 +616,11 @@ private:
             bonbori_off.type = mecha_control::msg::MechAction::BONBORI;
             bonbori_off.bonbori_enable = false;
             ra_list.add_action(RobotAction(bonbori_off, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("bonbori off"));
+
+            auto hina_take_f = mecha_control::msg::MechAction();
+            hina_take_f.type = mecha_control::msg::MechAction::HINA;
+            hina_take_f.hina.command = mecha_control::msg::HinaCmdType::UP_AND_CARRY;
+            ra_list.add_action(RobotAction(hina_take_f, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina up"));
 
             ra_list.add_action(RobotAction(
                 path_callers.getPath(pure_pursuit::srv::GetPath::Request::RIGHT_HINA_COLLECT_RETRY),
@@ -640,6 +675,11 @@ private:
             bonbori_off.type = mecha_control::msg::MechAction::BONBORI;
             bonbori_off.bonbori_enable = false;
             ra_list.add_action(RobotAction(bonbori_off, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("bonbori off"));
+
+            auto hina_take_f = mecha_control::msg::MechAction();
+            hina_take_f.type = mecha_control::msg::MechAction::HINA;
+            hina_take_f.hina.command = mecha_control::msg::HinaCmdType::UP_AND_CARRY;
+            ra_list.add_action(RobotAction(hina_take_f, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina up"));
             
             ra_list.add_action(RobotAction(
                 path_callers.getPath(pure_pursuit::srv::GetPath::Request::RIGHT_DAIZA_PLACE_RETRY),
@@ -709,6 +749,11 @@ private:
             bonbori_off.type = mecha_control::msg::MechAction::BONBORI;
             bonbori_off.bonbori_enable = false;
             ra_list.add_action(RobotAction(bonbori_off, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("bonbori off"));
+
+            auto hina_take_f = mecha_control::msg::MechAction();
+            hina_take_f.type = mecha_control::msg::MechAction::HINA;
+            hina_take_f.hina.command = mecha_control::msg::HinaCmdType::UP_AND_CARRY;
+            ra_list.add_action(RobotAction(hina_take_f, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("hina up"));
 
             ra_list.add_action(RobotAction(
                 path_callers.getPath(pure_pursuit::srv::GetPath::Request::RIGHT_HINA_PLACE_RETRY),
