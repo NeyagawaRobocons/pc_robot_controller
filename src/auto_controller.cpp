@@ -287,7 +287,7 @@ private:
 
             auto daiza_place = mecha_control::msg::MechAction();
             daiza_place.type = mecha_control::msg::MechAction::DAIZA;
-            daiza_place.daiza.command = mecha_control::msg::DaizaCmdType::EXPAND_AND_PLACE_AND_CONTRACT;
+            daiza_place.daiza.command = mecha_control::msg::DaizaCmdType::EXPAND_AND_PLACE;
             ra_list.add_action(RobotAction(daiza_place, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza ready"));
 
             auto align_pos = mecha_control::msg::MechAction();
@@ -396,7 +396,7 @@ private:
 
             auto daiza_place = mecha_control::msg::MechAction();
             daiza_place.type = mecha_control::msg::MechAction::DAIZA;
-            daiza_place.daiza.command = mecha_control::msg::DaizaCmdType::EXPAND_AND_PLACE_AND_CONTRACT;
+            daiza_place.daiza.command = mecha_control::msg::DaizaCmdType::EXPAND_AND_PLACE;
             ra_list.add_action(RobotAction(daiza_place, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza ready"));
 
             auto align_pos = mecha_control::msg::MechAction();
@@ -545,7 +545,7 @@ private:
 
             auto daiza_place = mecha_control::msg::MechAction();
             daiza_place.type = mecha_control::msg::MechAction::DAIZA;
-            daiza_place.daiza.command = mecha_control::msg::DaizaCmdType::EXPAND_AND_PLACE_AND_CONTRACT;
+            daiza_place.daiza.command = mecha_control::msg::DaizaCmdType::EXPAND_AND_PLACE;
             ra_list.add_action(RobotAction(daiza_place, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza ready"));
 
             auto align_pos = mecha_control::msg::MechAction();
@@ -733,7 +733,7 @@ private:
 
             auto daiza_place = mecha_control::msg::MechAction();
             daiza_place.type = mecha_control::msg::MechAction::DAIZA;
-            daiza_place.daiza.command = mecha_control::msg::DaizaCmdType::EXPAND_AND_PLACE_AND_CONTRACT;
+            daiza_place.daiza.command = mecha_control::msg::DaizaCmdType::EXPAND_AND_PLACE;
             ra_list.add_action(RobotAction(daiza_place, daiza_cmd_client_, hina_cmd_client_, bonbori_msg_pub_), std::string("daiza ready"));
 
             auto align_pos = mecha_control::msg::MechAction();
